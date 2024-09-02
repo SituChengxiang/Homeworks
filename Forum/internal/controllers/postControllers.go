@@ -61,7 +61,7 @@ func GetPosts(c *gin.Context) {
 			// unquotedString, _ := strconv.Unquote(slicejson)
 			c.JSON(200, gin.H{
 				"code": 200,
-				"data": Posts,
+				"data": gin.H{"post_list": Posts},
 				"msg":  "success",
 			})
 		}
@@ -120,7 +120,7 @@ func PostDelete(c *gin.Context) {
 			utils.JsonInternalServerErrorResponse(c, "Oops! Something went wrong while deleting the post in the database.")
 		}
 	} else {
-		utils.JsonUnAuthorizedResponse(c, "请检查权限！")
+		utils.JsonUnAuthorizedResponse(c, "Unauthorized access!")
 	}
 }
 

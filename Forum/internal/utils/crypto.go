@@ -17,7 +17,7 @@ func Sha512Hash(input string) string {
 	return hex.EncodeToString(hash)
 }
 
-var key = []byte("d3010e9279e6d5fdb78ad87f413debbb02583f088482da996ae975b20bfe63df")
+var key = []byte("02583f088482da996ae975b20bfe63df")
 
 func EncryptAES(input string) (string, error) {
 	block, err := aes.NewCipher(key)

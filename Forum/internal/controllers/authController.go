@@ -45,6 +45,7 @@ type RegisterData struct {
 func Register(c *gin.Context) {
 	// 接收参数
 	var data RegisterData
+	log.Info().Str("operation", "user registration").Msg("Starting user registration")
 	err := c.ShouldBindJSON(&data)
 	if err != nil {
 		utils.JsonErrorResponse(c, 500, "Failed to parse JSON")
@@ -111,6 +112,7 @@ type LoginData struct {
 
 // 登录
 func Login(c *gin.Context) {
+
 	//接收参数
 	var data LoginData
 	err := c.ShouldBindJSON(&data)
@@ -119,6 +121,7 @@ func Login(c *gin.Context) {
 		utils.JsonErrorResponse(c, 500, "Failed to parse JSON")
 	}
 	//接受参数成功后判断用户是否存在
+	log.Info().Str("username", data.Username).Msg("User registration started")
 	err = services.CheckUserExistByUserName(data.Username)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -157,7 +160,7 @@ func Login(c *gin.Context) {
 
 		//返回结果
 		c.JSON(200, gin.H{"code": 200, "data": gin.H{
-			"user_id":   user.UUID,
+			"uuid":      user.UUID,
 			"user_type": user.Type,
 		}, "msg": "success",
 			"token": token})
