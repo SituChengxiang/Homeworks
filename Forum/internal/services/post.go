@@ -24,7 +24,7 @@ type tinyPost struct {
 	ID        uint   `json:"id"`
 	Content   string `json:"content"`
 	Author    string `json:"uuid"`
-	CreatedAt string `json:"created_at"`
+	CreatedAt string `json:"time"`
 }
 
 func GetPosts() ([]tinyPost, error) {
@@ -112,7 +112,7 @@ func RemarkPost(postID uint, uuid string) error {
 		}
 	}()
 	//加锁UPDATE
-	if err := tx.Clauses(clause.Locking{Strength: "FOR UPDATE"}).Where("id = ?", postID).First(&models.Post{}).Error; err != nil {
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", postID).First(&models.Post{}).Error; err != nil {
 		tx.Rollback()
 		logger.Error().Err(err).Msg("Failed to lock post row")
 		return err
