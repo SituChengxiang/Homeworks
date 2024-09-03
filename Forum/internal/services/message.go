@@ -20,7 +20,7 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	// 创建一个日志文件，并设置日志格式
-	file, err := os.OpenFile("./log/log.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("./log/log.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		panic(err)
 	}
