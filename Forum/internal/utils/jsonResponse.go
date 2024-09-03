@@ -22,12 +22,12 @@ func JsonSuccessResponse(c *gin.Context, data interface{}) {
 
 // 服务器返回了一些奇怪的错误
 func JsonErrorResponse(c *gin.Context, code int, msg string) {
-	JsonResponse(c, http.StatusInternalServerError, code, msg, nil)
+	JsonResponse(c, 200, code, msg, nil)
 }
 
 // 数据内部发生了一些奇怪的错误
 func JsonInternalServerErrorResponse(c *gin.Context, msg string) {
-	JsonResponse(c, http.StatusInternalServerError, 200500, msg, nil)
+	JsonResponse(c, 200, 200500, msg, nil)
 }
 
 // 未授权的访问
