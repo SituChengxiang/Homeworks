@@ -118,7 +118,7 @@ func MessageReportApprove(postID uint, approval int, cUUID string) error {
 
 // 获取审批结果
 func GetApprovalResult(c *gin.Context) {
-	db := database.GetDB() // 假设你在database包中定义了GetDB函数来获取数据库连接
+	db := database.GetDB() // 获取数据库连接
 	response, err := services.GetReportedPosts(db, c.Query("UUID"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve messages"})
