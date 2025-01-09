@@ -2,52 +2,52 @@
 #include <stdlib.h>
 #include <string.h>
 
-// å®šä¹‰å­¦ç”Ÿç»“æ„ä½“
-typedef struct {
-    char name[100];    // å§“åå­—ç¬¦ä¸²
-    char id[20];       // å­¦å·å­—ç¬¦ä¸²
-    float scores[3];   // ä¸‰é—¨è¯¾ç¨‹çš„æˆç»©
-} Student;
+// ¶¨ÒåÑ§Éú½á¹¹Ìå
+struct Student {
+	char name[100];    // ĞÕÃû×Ö·û´®
+	char id[20];       // Ñ§ºÅ×Ö·û´®
+	float scores[3];   // ÈıÃÅ¿Î³ÌµÄ³É¼¨
+};
 
 int main() {
-    Student student;
-    FILE *file;
+	struct Student student;
+	FILE *file;
 
-    // æç¤ºç”¨æˆ·è¾“å…¥å­¦ç”Ÿçš„å§“åå’Œå­¦å·
-    printf("è¯·è¾“å…¥å­¦ç”Ÿçš„å§“åï¼š");
-    fgets(student.name, sizeof(student.name), stdin);
-    student.name[strcspn(student.name, "\n")] = 0; // å»é™¤æ¢è¡Œç¬¦
+	// ÌáÊ¾ÓÃ»§ÊäÈëÑ§ÉúµÄĞÕÃûºÍÑ§ºÅ
+	printf("ÇëÊäÈëÑ§ÉúµÄĞÕÃû£º");
+	fgets(student.name, sizeof(student.name), stdin);
+	student.name[strcspn(student.name, "\n")] = 0; // È¥³ı»»ĞĞ·û
 
-    printf("è¯·è¾“å…¥å­¦ç”Ÿçš„å­¦å·ï¼š");
-    fgets(student.id, sizeof(student.id), stdin);
-    student.id[strcspn(student.id, "\n")] = 0; // å»é™¤æ¢è¡Œç¬¦
+	printf("ÇëÊäÈëÑ§ÉúµÄÑ§ºÅ£º");
+	fgets(student.id, sizeof(student.id), stdin);
+	student.id[strcspn(student.id, "\n")] = 0; // È¥³ı»»ĞĞ·û
 
-    // æç¤ºç”¨æˆ·è¾“å…¥ä¸‰é—¨è¯¾ç¨‹çš„æˆç»©
-    for (int i = 0; i < 3; i++) {
-        printf("è¯·è¾“å…¥ç¬¬%dé—¨è¯¾ç¨‹çš„æˆç»©ï¼š", i + 1);
-        scanf("%f", &student.scores[i]);
-    }
+	// ÌáÊ¾ÓÃ»§ÊäÈëÈıÃÅ¿Î³ÌµÄ³É¼¨
+	for (int i = 0; i < 3; i++) {
+		printf("ÇëÊäÈëµÚ%dÃÅ¿Î³ÌµÄ³É¼¨£º", i + 1);
+		scanf("%f", &student.scores[i]);
+	}
 
-    // æ¸…é™¤è¾“å…¥ç¼“å†²åŒºä¸­çš„æ¢è¡Œç¬¦
-    getchar();
+	// Çå³ıÊäÈë»º³åÇøÖĞµÄ»»ĞĞ·û
+	getchar();
 
-    // æ‰“å¼€æ–‡ä»¶ç”¨äºå†™å…¥
-    file = fopen("d:\\aaa.txt", "w");
-    if (file == NULL) {
-        printf("æ— æ³•æ‰“å¼€æ–‡ä»¶ï¼");
-        return 1;
-    }
+	// ´ò¿ªÎÄ¼şÓÃÓÚĞ´Èë
+	file = fopen("d:\\aaa.txt", "w");
+	if (file == NULL) {
+		printf("ÎŞ·¨´ò¿ªÎÄ¼ş£¡");
+		return 1;
+	}
 
-    // å°†å­¦ç”Ÿä¿¡æ¯å†™å…¥æ–‡ä»¶
-    fprintf(file, "å§“åï¼š%s å­¦å·ï¼š%s", student.name, student.id);
-    for (int i = 0; i < 3; i++) {
-        fprintf(file, "ç¬¬%dé—¨è¯¾ç¨‹æˆç»©ï¼š%f", i + 1, student.scores[i]);
-    }
+	// ½«Ñ§ÉúĞÅÏ¢Ğ´ÈëÎÄ¼ş
+	fprintf(file, "ĞÕÃû£º%s Ñ§ºÅ£º%s", student.name, student.id);
+	for (int i = 0; i < 3; i++) {
+		fprintf(file, "µÚ%dÃÅ¿Î³Ì³É¼¨£º%f", i + 1, student.scores[i]);
+	}
 
-    // å…³é—­æ–‡ä»¶
-    fclose(file);
+	// ¹Ø±ÕÎÄ¼ş
+	fclose(file);
 
-    printf("å­¦ç”Ÿä¿¡æ¯å·²æˆåŠŸå†™å…¥åˆ°d:\\aaa.txtæ–‡ä»¶ä¸­ã€‚");
+	printf("Ñ§ÉúĞÅÏ¢ÒÑ³É¹¦Ğ´Èëµ½d:\\aaa.txtÎÄ¼şÖĞ¡£");
 
-    return 0;
+	return 0;
 }
