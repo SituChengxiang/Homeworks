@@ -1,6 +1,7 @@
 function result = homework_1(x)
     % 使用泰勒展开计算 e^x
     % 精度要求: 与 MATLAB 内置 exp() 函数的差值小于 1e-6
+    % 302024343017 沈宽
 
     tolerance = 1e-6;  
     maxIter = 1000;   % 最大迭代次数，防止无限循环
@@ -25,8 +26,13 @@ function result = homework_1(x)
     finalError = result - exp(x); % 与内置函数的实际差值
 
     % 高精度输出
-    fprintf('Final result: %.15e\n', result);
-    fprintf('Final error (result - exp(x)): %.15e\n', finalError);
+    if isreal(result)
+        fprintf('Final result: %.15f\n', result);
+        fprintf('Final error (result - exp(x)): %.15e\n', finalError);
+    else
+        fprintf('Final result: %.15f + %.15fi\n', real(result), imag(result));
+        fprintf('Final error (result - exp(x)): %.15e + %.15ei\n', real(finalError), imag(finalError));
+    end
 
     if k > maxIter
         warning('Maximum iterations reached. Result may not meet precision requirement.');
