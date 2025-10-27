@@ -48,7 +48,7 @@ print((0.1 and 1),'5')
 print(([] or 1),'6')
 # [] or 1 返回1 
 print(('a' or 1),'7')
-# 'a' or 1 返回a 
+# 'a' or 1 返回`a` 
 
 
 
@@ -64,12 +64,14 @@ print(oddList)
 evenList = list(range(0, n+1, 2))
 print(evenList)
 
+# 作业题4的第(3)(4)小题按要求要用使用list和range函数分别创建
+
 # (3） [0,n]之内的奇数从大到小形成的列表
-oddListReverse = sorted(oddList, reverse=True)
+oddListReverse = list(range(n-1, 0, -2))
 print(oddListReverse)
 
 # (4） [0,n]之内的偶数从大到小形成的列表
-evenListReverse = evenList[::-1]
+evenListReverse = list(range(n, -1, -2))
 print(evenListReverse)
 
 #=================================作业题5========================================
@@ -81,6 +83,8 @@ for i in s:
     count = s.count(i)
     if count > 0:
         print(i, count)
+##  要求用内置函数，lst.count()不是内置函数，是类的方法，本题答案print(len(set(s)))
+print(len(set(s)))
 #在上面写自己的程序
 
 
