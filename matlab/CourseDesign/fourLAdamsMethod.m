@@ -1,13 +1,8 @@
 function [t, z] = fourLAdamsMethod(odeFunc, tspan, z0, options)
-% 四阶 Adams-Bashforth 显式多步法。 参数：常微分方程、时段、初值、选项
+% 四阶 Adams-Bashforth 显式多步法
 
-if nargin >= 4 && isstruct(options) && isfield(options, 'MaxStep') && ~isempty(options.MaxStep)
-    h = options.MaxStep;
-    stepCount = ceil((tspan(2) - tspan(1)) / h);
-else
-    stepCount = 120000; % 一个比较多的默认分段数
-    h = (tspan(2) - tspan(1)) / stepCount;
-end
+if isfield(options, 'MaxStep'), h = options.MaxStep; else, h = (tspan(2)-tspan(1))/120000; end
+stepCount = ceil((tspan(2) - tspan(1)) / h);
 
 t = linspace(tspan(1), tspan(2), stepCount + 1);
 numStates = numel(z0);
