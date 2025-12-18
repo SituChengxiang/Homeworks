@@ -1,54 +1,45 @@
-% main.m 使用 ode45 求解复合双摆 0-60s 运动并可视化作为参考值。
 clear; clc;
-
-% 载入初始条件（角度以度为单位，主要是几何参数）
+% 载入初始条件（几何参数和初始静态条件）
 run('initalCondition.m');
-params = struct('l1', l1, 'l2', l2, 'm1', m1, 'm2', m2, 'g', g);
-radTheta1 = deg2rad(theta10);
-radTheta2 = deg2rad(theta20);
-z0 = [radTheta1; radTheta2; 0; 0];
+params = struct('l1', l1, 'l2', l2, 'm1', m1, 'm2', m2, 'g', g, 'theta10', theta10, 'theta20', theta20);
+z0 = [deg2rad(theta10); deg2rad(theta20); 0; 0];
 
 % 积分设置：时间区域、各求解器自己还需要的参数
-tspan = [0, 60];
+tspan = [0, 20];
 options = odeset('RelTol', 1e-10, 'AbsTol', 1e-12, 'MaxStep', 0.0005);
 
-% 调用 ode113 获得高精度参考轨迹。
-[t, z] = ode113(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
-
-% 使用自编数值方法求解以对比结果。
+% 各种算法生成参考解，如果想看动画在这里取消掉对应的算法的注释
+% [t, z] = ode45(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = eularMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = heunMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = threeLRK(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = fourLRK(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = twoLAdamsMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = fourLAdamsMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
-% [t, z] = fourLHiddenAdamsMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
+% [t, z] = fourLAdamsMoultonMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 
-% 最核心部分的代码：复合双摆的 ODE 定义。
-function dzdt = doublePendulumODE(~, z, params)
-% 复合双摆一阶 ODE 表达。
+%% 精度对比
+solversList = {
+    % @eularMethod, 'Euler';
+    % @heunMethod, 'Heun';
+    % @threeLRK, 'RK3';
+    % @fourLRK, 'RK4';
+    % @twoLAdamsMethod, 'Adams2';
+    % @fourLAdamsMethod, 'Adams4';
+    % @fourLAdamsMoultonMethod, 'AdamsMoulton4'
+};
+% compareSolvers(@doublePendulumODE, tspan, z0, params, solversList, options);
 
-l1 = params.l1; l2 = params.l2;
-m1 = params.m1; m2 = params.m2; g = params.g;
 
-theta1 = z(1); theta2 = z(2);
-omega1 = z(3); omega2 = z(4);
+%% 敏感性分析
+analyzeSensitivity(@doublePendulumODE, tspan, params, options);
 
-massMatrix = [ (m1 + m2) * l1, m2 * l2 * cos(theta1 - theta2);
-               l1 * cos(theta1 - theta2), l2 ];
-forcing = [ -m2 * l2 * sin(theta1 - theta2) * omega2^2 - (m1 + m2) * g * sin(theta1);
-            l1 * sin(theta1 - theta2) * omega1^2 - g * sin(theta2) ];
-
-alpha = massMatrix \ forcing;
-
-dzdt = [omega1; omega2; alpha(1); alpha(2)];
-end
-
-% 计算两端点在平面中的轨迹坐标。
-x1 = l1 * sin(z(:, 1));
-y1 = -l1 * cos(z(:, 1));
-x2 = x1 + l2 * sin(z(:, 2));
-y2 = y1 - l2 * cos(z(:, 2));
+% 计算两端点在平面中的轨迹坐标，并将所有状态合并到一个矩阵中 [t, x1, y1, x2, y2]^T 便于后续研究
+% x1 = l1 * sin(z(:, 1));
+% y1 = -l1 * cos(z(:, 1));
+% x2 = x1 + l2 * sin(z(:, 2));
+% y2 = y1 - l2 * cos(z(:, 2));
+% trajectory = [t, x1, y1, x2, y2].';
 
 % 可视化角度响应（转为度便于解读）。
 % figure('Name', 'Double Pendulum Trajectory', 'Color', 'w');
@@ -94,29 +85,34 @@ y2 = y1 - l2 * cos(z(:, 2));
 % grid on;
 % hold off;
 
-% 动画演示：展示 0-60 s 内摆杆与小球的实时运动
+%% 动画演示：展示 0-60 s 内摆杆与小球的实时运动
 % 这部分的代码由QwenCoder编写，实在是没空仔细查代码了
-figure('Name', 'Pendulum Animation', 'Color', 'w');
-axis equal;
-hold on;
-plot(0, 0, 'ko', 'MarkerFaceColor', 'k');
-axisPadding = 1.1 * max([l1 + l2; abs(x1(:)); abs(y1(:))]);
-axis([-axisPadding, axisPadding, -axisPadding, axisPadding]);
-xlabel('x / m');
-ylabel('y / m');
-title('复合双摆 0-60 s 动画');
-grid on;
+% figure('Name', 'Pendulum Animation', 'Color', 'w');
+% axis equal;
+% hold on;
+% plot(0, 0, 'ko', 'MarkerFaceColor', 'k');
+% axisPadding = 1.1 * max([l1 + l2; abs(x1(:)); abs(y1(:))]);
+% axis([-axisPadding, axisPadding, -axisPadding, axisPadding]);
+% xlabel('x / m');
+% ylabel('y / m');
+% title('复合双摆 0-60 s 动画');
+% grid on;
 
-rod1 = plot([0, x1(1)], [0, y1(1)], 'LineWidth', 2, 'Color', [0 0.45 0.74]);
-rod2 = plot([x1(1), x2(1)], [y1(1), y2(1)], 'LineWidth', 2, 'Color', [0.85 0.33 0.1]);
-mass1 = plot(x1(1), y1(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', [0 0.45 0.74], 'MarkerEdgeColor', 'none');
-mass2 = plot(x2(1), y2(1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', [0.85 0.33 0.1], 'MarkerEdgeColor', 'none');
+% rod1 = plot([0, trajectory(2,1)], [0, trajectory(3,1)], 'LineWidth', 2, 'Color', [0 0.45 0.74]);
+% rod2 = plot([trajectory(2,1), trajectory(4,1)], [trajectory(3,1), trajectory(5,1)], 'LineWidth', 2, 'Color', [0.85 0.33 0.1]);
+% mass1 = plot(trajectory(2,1), trajectory(3,1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', [0 0.45 0.74], 'MarkerEdgeColor', 'none');
+% mass2 = plot(trajectory(4,1), trajectory(5,1), 'o', 'MarkerSize', 10, 'MarkerFaceColor', [0.85 0.33 0.1], 'MarkerEdgeColor', 'none');
 
-frameSkip = max(1, round(numel(t) / 1800)); % 控制动画帧数，避免刷新过慢
-for idx = 1:frameSkip:numel(t)
-    set(rod1, 'XData', [0, x1(idx)], 'YData', [0, y1(idx)]);
-    set(rod2, 'XData', [x1(idx), x2(idx)], 'YData', [y1(idx), y2(idx)]);
-    set(mass1, 'XData', x1(idx), 'YData', y1(idx));
-    set(mass2, 'XData', x2(idx), 'YData', y2(idx));
-    drawnow;
-end
+% frameSkip = max(1, round(numel(t) / 1800));
+% % 瞎选的参数 反正能看效果
+% for idx = 1:frameSkip:numel(t)
+%     currentFrame = trajectory(:, idx);
+%     cx1 = currentFrame(2); cy1 = currentFrame(3);
+%     cx2 = currentFrame(4); cy2 = currentFrame(5);
+
+%     set(rod1, 'XData', [0, cx1], 'YData', [0, cy1]);
+%     set(rod2, 'XData', [cx1, cx2], 'YData', [cy1, cy2]);
+%     set(mass1, 'XData', cx1, 'YData', cy1);
+%     set(mass2, 'XData', cx2, 'YData', cy2);
+%     drawnow;
+% end

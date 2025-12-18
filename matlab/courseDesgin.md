@@ -6,7 +6,7 @@
 
 ### 研究内容
 
-多步法 Adams方法
+多步法 Adams方法  
 单步法 休恩方法、RK方法……
 
 #### **1. 研究背景**
@@ -39,7 +39,6 @@
 3. 采用 `ode45` 求解器进行数值积分（相对误差容限 $10^{-6}$）得到较精确解求解，对于给定参数的初始条件，比较不同算法的误差随着步长h，时间t的变化规律。
 
 4. 选择一种高精度算法，分析双摆轨迹的变化规律（并绘制分岔图、吸引子图、Poincaré截面图。）
-
 
 - **参数设置**：  
 
@@ -205,7 +204,7 @@ $\mathbf{M}$ 为质量矩阵，$\mathbf{F}$ 为广义力向量（见前述推导
   $$
   e_n = \mathbf{z}(t_n) - \mathbf{z}_n = e_{n-1} + h[\mathbf{f}(t_{n-1},\mathbf{z}(t_{n-1})) - \mathbf{f}(t_{n-1},\mathbf{z}_{n-1})] + h\tau_{n-1}
   $$
-  由Gronwall不等式得 $ \|e_n\| \leq C e^{Lt} \max \|\tau_k\| $（$L$ 为Lipschitz常数）。
+  由Gronwall不等式得 $\|e_n\| \leq C e^{Lt} \max \|\tau_k\|$（$L$ 为Lipschitz常数）。
 
 #### **4. 混沌量化指标**
 
@@ -430,8 +429,6 @@ $$
 
 ---
 
-
-
 #### **4. 运动方程矩阵形式（竖向量标准写法）**
 
 将方程组写为 $\mathbf{M} \ddot{\boldsymbol{\theta}} = \mathbf{F}$ 形式：
@@ -515,11 +512,10 @@ In eularMethod (line 18)
 In main (line 19)
 ```
 
-以下是四种经典数值积分方法的数学推导，严格遵循从泰勒展开到算法构造的逻辑链条。推导过程不回避关键细节，确保工程实现的精确性。
-
 ---
 
-### **通用问题设定**
+### **单步法-通用问题设定**
+
 考虑一阶常微分方程初值问题：
 $$
 \dot{y} = f(t, y), \quad y(t_0) = y_0
@@ -529,22 +525,25 @@ $$
 ---
 
 ### **1. 显式Euler方法 (Explicit Euler)**
-#### **推导**
-1.  **泰勒展开**：  
+
+#### **Eular推导**
+
+1. **泰勒展开**：  
     $$
     y(t_{n+1}) = y(t_n) + h \dot{y}(t_n) + \frac{h^2}{2} \ddot{y}(t_n) + \mathcal{O}(h^3)
     $$
-2.  **代入方程**：$\dot{y}(t_n) = f(t_n, y_n)$  
+2. **代入方程**：$\dot{y}(t_n) = f(t_n, y_n)$  
     忽略二阶及以上导数项（截断误差 $\mathcal{O}(h^2)$）：
     $$
     y(t_{n+1}) \approx y(t_n) + h f(t_n, y_n)
     $$
-3.  **迭代格式**：
+3. **迭代格式**：
     $$
     y_{n+1} = y_n + h f(t_n, y_n)
     $$
 
-#### **关键特性**
+#### **Eular关键特性**
+
 - **局部截断误差 (LTE)**：$\mathcal{O}(h^2)$
 - **全局截断误差 (GTE)**：$\mathcal{O}(h)$
 - **单步、显式、一阶精度**
@@ -552,18 +551,20 @@ $$
 ---
 
 ### **2. Heun方法 (Heun's Method / Improved Euler)**
-#### **推导**
-1.  **梯形法则思想**：  
+
+#### **Heun推导**
+
+1. **梯形法则思想**：  
     积分 $\int_{t_n}^{t_{n+1}} \dot{y}  dt = \int_{t_n}^{t_{n+1}} f(t, y)  dt$，用梯形公式近似：
     $$
     y_{n+1} = y_n + \frac{h}{2} \left[ f(t_n, y_n) + f(t_{n+1}, y_{n+1}) \right]
     $$
     但 $y_{n+1}$ 未知，导致隐式。
-2.  **显式化**：用Euler法预测 $y_{n+1}^{(0)} = y_n + h f(t_n, y_n)$，代入：
+2. **显式化**：用Euler法预测 $y_{n+1}^{(0)} = y_n + h f(t_n, y_n)$，代入：
     $$
     y_{n+1} = y_n + \frac{h}{2} \left[ f(t_n, y_n) + f(t_{n+1}, y_n + h f(t_n, y_n)) \right]
     $$
-3.  **标准格式**：
+3. **标准格式**：
     $$
     \begin{aligned}
     k_1 &= f(t_n, y_n) \\
@@ -572,7 +573,8 @@ $$
     \end{aligned}
     $$
 
-#### **关键特性**
+#### **Heun关键特性**
+
 - **LTE**：$\mathcal{O}(h^3)$ （因梯形法对线性函数精确）
 - **GTE**：$\mathcal{O}(h^2)$
 - **预测-校正结构，二阶精度**
@@ -580,10 +582,12 @@ $$
 ---
 
 ### **3. 三阶Runge-Kutta方法 (RK3)**
-#### **推导**
+
+#### **RK3推导**
+
 目标是构造一个三阶段方法，使其泰勒展开匹配到 $\mathcal{O}(h^3)$。
 
-1.  **通用RK3形式**：
+1. **通用RK3形式**：
     $$
     \begin{aligned}
     k_1 &= f(t_n, y_n) \\
@@ -594,7 +598,7 @@ $$
     $$
     *（采用Kutta's 3rd-order scheme）*
 
-2.  **验证精度**：  
+2. **验证RK3精度**：  
     将 $k_2, k_3$ 用泰勒展开至 $h^2$ 项：
     $$
     \begin{aligned}
@@ -612,7 +616,8 @@ $$
     $$
     与 $y(t_{n+1})$ 的二阶泰勒展开一致（因 $\ddot{y} = f_t + f_y f$）。
 
-#### **关键特性**
+#### **RK3关键特性**
+
 - **LTE**：$\mathcal{O}(h^4)$
 - **GTE**：$\mathcal{O}(h^3)$
 - **三阶精度，计算量适中**
@@ -620,10 +625,12 @@ $$
 ---
 
 ### **4. 四阶Runge-Kutta方法 (RK4)**
-#### **推导**
+
+#### **RK4推导**
+
 经典RK4是匹配泰勒展开到 $\mathcal{O}(h^4)$ 的最简方案。
 
-1.  **算法公式**：
+1. **RK4算法公式**：
     $$
     \begin{aligned}
     k_1 &= f(t_n, y_n) \\
@@ -634,7 +641,7 @@ $$
     \end{aligned}
     $$
 
-2.  **精度验证**（概要）：  
+2. **RK4精度验证**（概要）：  
     - $k_1 = f$  
     - $k_2 = f + \frac{h}{2}(f_t + f_y f) + \frac{h^2}{8}(f_{tt} + 2f_{ty}f + f_{yy}f^2 + f_y f_t + f_y^2 f) + \mathcal{O}(h^3)$  
     - $k_3$ 展开类似 $k_2$  
@@ -646,14 +653,16 @@ $$
     其中 $\dot{f} = f_t + f_y f$, $\ddot{f} = f_{tt} + 2f_{ty}f + f_{yy}f^2 + f_y(f_t + f_y f)$, $f^{(3)}$ 为三阶导数。  
     这与 $y(t_{n+1})$ 的四阶泰勒展开完全一致。
 
-#### **关键特性**
+#### **RK4关键特性**
+
 - **LTE**：$\mathcal{O}(h^5)$
 - **GTE**：$\mathcal{O}(h^4)$
 - **最广泛使用的高精度单步方法，四阶精度**
 
 ---
 
-### **精度与效率对比总结**
+### **单步骤法-精度与效率对比总结**
+
 | 方法          | 阶数 | 每步函数计算次数 | 全局误差     | 适用场景                     |
 |---------------|------|------------------|--------------|------------------------------|
 | **Euler**     | 1    | 1                | $\mathcal{O}(h)$ | 教学演示，极低精度需求       |
@@ -664,13 +673,308 @@ $$
 ---
 
 ### **在双摆问题中的实施要点**
+
 1. **状态向量**：所有方法作用于 $\mathbf{z} = [\theta_1, \theta_2, \omega_1, \omega_2]^T \in \mathbb{R}^4$  
-2. **函数调用**：`f = @(t, z) doublePendulumODE(t, z, params)`  
-3. **步长选择**：  
+2. **步长选择**：  
    - Euler: $h \leq 0.01$ (否则发散)  
    - RK4: $h = 0.05 \sim 0.1$ 可获高精度  
-4. **误差控制**：用RK4解作为"真解"，计算其他方法的 $\|\mathbf{z}_{\text{num}} - \mathbf{z}_{\text{ref}}\|_2$
+3. **误差控制**：用`ode113`解作为"真解"，计算其他方法的 $\|\mathbf{z}_{\text{num}} - \mathbf{z}_{\text{ref}}\|_2$
 
-这些推导已剔除冗余解释，直击算法核心。实现时严格按公式编码即可，无需额外调整。下一步可直接进入代码编写阶段。
+---
+
+### **多步法-通用设定回顾**
+
+考虑初值问题：
+$$
+\dot{y} = f(t, y), \quad y(t_n) = y_n
+$$
+
+在区间 $[t_n, t_{n+1}]$ 上对微分方程积分：
+$$
+y(t_{n+1}) = y(t_n) + \int_{t_n}^{t_{n+1}} f(t, y(t)) \, dt
+$$
+
+**核心思想**：用插值多项式 $p_k(t)$ 近似 $f(t, y(t))$，然后对 $p_k(t)$ 积分。  
+
+- 若 $p_k$ 基于 $t_n, t_{n-1}, \dots$ → **显式法（Adams-Bashforth）**  
+- 若 $p_k$ 包含 $t_{n+1}$ → **隐式法（Adams-Moulton）**
+
+设等距节点：$t_j = t_0 + jh$，步长 $h$ 恒定。
+
+---
+
+### **1. Adams-Bashforth 2阶方法（AB2）**
+
+#### **1. AB2插值构造**
+
+用 $t_n, t_{n-1}$ 处的函数值构造线性插值 $p_1(t)$：
+$$
+p_1(t) = f_n + \frac{f_n - f_{n-1}}{h} (t - t_n)
+$$
+其中 $f_j = f(t_j, y_j)$。
+
+#### **2. AB2积分近似**
+
+$$
+\begin{aligned}
+\int_{t_n}^{t_{n+1}} f(t)\,dt
+&\approx \int_{t_n}^{t_{n+1}} p_1(t)\,dt
+= \int_{t_n}^{t_{n+1}} \left[ f_n + \frac{f_n - f_{n-1}}{h} (t - t_n) \right] dt \\
+&= \left[ f_n (t - t_n) + \frac{f_n - f_{n-1}}{2h} (t - t_n)^2 \right]_{t_n}^{t_{n+1}} \\
+&= f_n h + \frac{f_n - f_{n-1}}{2h} h^2
+= h \left( f_n + \frac{f_n - f_{n-1}}{2} \right) \\
+&= \frac{h}{2} (3f_n - f_{n-1})
+\end{aligned}
+$$
+
+#### **3. 迭代格式**
+
+$$
+\boxed{y_{n+1} = y_n + \frac{h}{2} \left( 3f_n - f_{n-1} \right)}
+$$
+
+#### **4. 局部截断误差分析**
+
+插值余项：
+$$
+f(t) - p_1(t) = \frac{f''(\xi)}{2} (t - t_n)(t - t_{n-1}), \quad \xi \in [t_{n-1}, t_{n+1}]
+$$
+积分余项：
+$$
+\begin{aligned}
+\text{LTE} &= \int_{t_n}^{t_{n+1}} \frac{f''(\xi(t))}{2} (t - t_n)(t - t_{n-1}) \, dt \\
+&\approx \frac{f''(\xi)}{2} \int_0^h \tau (\tau - h) \, d\tau
+= \frac{f''(\xi)}{2} \left[ \frac{\tau^3}{3} - \frac{h\tau^2}{2} \right]_0^h \\
+&= \frac{f''(\xi)}{2} \left( \frac{h^3}{3} - \frac{h^3}{2} \right)
+= -\frac{h^3}{12} f''(\xi)
+\end{aligned}
+$$
+故 **LTE = $\mathcal{O}(h^3)$** ⇒ **二阶方法**。
+
+> **注意**：需 $y_0, y_1$ 作为起始值（可用RK2或RK4生成）。
+
+---
+
+### **2. Adams-Bashforth 4阶方法（AB4）**
+
+#### **1. AB4插值构造**
+
+用 $t_n, t_{n-1}, t_{n-2}, t_{n-3}$ 处的 $f$ 构造三次插值 $p_3(t)$。  
+更高效：采用**牛顿前向差分插值**。令 $s = \frac{t - t_n}{h}$，则：
+$$
+p_3(t) = f_n + s \nabla f_n + \frac{s(s+1)}{2!} \nabla^2 f_n + \frac{s(s+1)(s+2)}{3!} \nabla^3 f_n
+$$
+其中 $\nabla f_n = f_n - f_{n-1}$, $\nabla^2 f_n = \nabla f_n - \nabla f_{n-1}$, etc.
+
+### **2. AB4积分变换**
+
+积分变量替换：$t = t_n + sh$, $dt = h\,ds$, $s \in [0,1]$：
+$$
+\int_{t_n}^{t_{n+1}} f(t)\,dt = h \int_0^1 p_3(t_n + sh)\, ds
+$$
+
+计算积分：
+$$
+\begin{aligned}
+\int_0^1 p_3\, ds &= \int_0^1 \left[ f_n + s \nabla f_n + \frac{s(s+1)}{2} \nabla^2 f_n + \frac{s(s+1)(s+2)}{6} \nabla^3 f_n \right] ds \\
+&= f_n \int_0^1 ds + \nabla f_n \int_0^1 s\,ds + \frac{\nabla^2 f_n}{2} \int_0^1 (s^2 + s)\,ds + \frac{\nabla^3 f_n}{6} \int_0^1 (s^3 + 3s^2 + 2s)\,ds \\
+&= f_n (1) + \nabla f_n \left(\frac{1}{2}\right) + \frac{\nabla^2 f_n}{2} \left(\frac{1}{3} + \frac{1}{2}\right) + \frac{\nabla^3 f_n}{6} \left(\frac{1}{4} + 1 + 1\right) \\
+&= f_n + \frac{1}{2} \nabla f_n + \frac{5}{12} \nabla^2 f_n + \frac{3}{8} \nabla^3 f_n
+\end{aligned}
+$$
+
+展开差分算子（还原为 $f_j$）：
+$$
+\begin{aligned}
+\nabla f_n &= f_n - f_{n-1} \\
+\nabla^2 f_n &= f_n - 2f_{n-1} + f_{n-2} \\
+\nabla^3 f_n &= f_n - 3f_{n-1} + 3f_{n-2} - f_{n-3}
+\end{aligned}
+$$
+
+代入并整理：
+$$
+\begin{aligned}
+\int_0^1 p_3\, ds &=
+f_n \left(1 + \frac{1}{2} + \frac{5}{12} + \frac{3}{8}\right)
++ f_{n-1} \left(-\frac{1}{2} - \frac{10}{12} - \frac{9}{8}\right) \\
+&\quad + f_{n-2} \left(\frac{5}{12} + \frac{9}{8}\right)
++ f_{n-3} \left(-\frac{3}{8}\right) \\
+&= \frac{55}{24}f_n - \frac{59}{24}f_{n-1} + \frac{37}{24}f_{n-2} - \frac{9}{24}f_{n-3}
+\end{aligned}
+$$
+
+#### **3. AB4迭代格式**
+
+$$
+\boxed{y_{n+1} = y_n + \frac{h}{24} \left( 55f_n - 59f_{n-1} + 37f_{n-2} - 9f_{n-3} \right)}
+$$
+
+#### **4. AB4精度**
+
+- 插值 $p_3(t)$ 匹配 $f$ 至三阶导数 ⇒ 积分余项含 $f^{(4)}$  
+- **LTE = $\mathcal{O}(h^5)$** ⇒ **四阶方法**  
+- 需 $y_{n-3}, y_{n-2}, y_{n-1}, y_n$ 作为起始值（建议用RK4生成前4点）
+
+---
+
+### **3. Adams-Moulton 4阶方法（AM4，隐式）**
+
+#### **1. AM4插值构造**
+
+包含终点 $t_{n+1}$，用 $t_{n+1}, t_n, t_{n-1}, t_{n-2}$ 构造三次插值 $q_3(t)$。  
+牛顿后向差分插值（令 $s = \frac{t - t_{n+1}}{h}$）：
+$$
+q_3(t) = f_{n+1} + s \nabla f_{n+1} + \frac{s(s+1)}{2} \nabla^2 f_{n+1} + \frac{s(s+1)(s+2)}{6} \nabla^3 f_{n+1}
+$$
+
+#### **2. AM4积分计算**
+
+$\int_{t_n}^{t_{n+1}} f(t)\,dt = h \int_{-1}^0 q_3(t_{n+1} + sh)\, ds$（因 $t_n = t_{n+1} - h$ ⇒ $s=-1$）
+
+$$
+\begin{aligned}
+\int_{-1}^0 q_3\, ds &= \int_{-1}^0 \left[ f_{n+1} + s \nabla f_{n+1} + \frac{s(s+1)}{2} \nabla^2 f_{n+1} + \frac{s(s+1)(s+2)}{6} \nabla^3 f_{n+1} \right] ds \\
+&= f_{n+1} (1) + \nabla f_{n+1} \left(-\frac{1}{2}\right) + \frac{\nabla^2 f_{n+1}}{2} \left(-\frac{1}{6}\right) + \frac{\nabla^3 f_{n+1}}{6} \left(\frac{1}{4}\right) \\
+&= f_{n+1} - \frac{1}{2} \nabla f_{n+1} - \frac{1}{12} \nabla^2 f_{n+1} + \frac{1}{24} \nabla^3 f_{n+1}
+\end{aligned}
+$$
+
+展开差分（注意 $\nabla f_{n+1} = f_{n+1} - f_n$, $\nabla^2 f_{n+1} = f_{n+1} - 2f_n + f_{n-1}$, etc.）：
+$$
+\begin{aligned}
+\int_{-1}^0 q_3\, ds &=
+f_{n+1} \left(1 - \frac{1}{2} - \frac{1}{12} + \frac{1}{24}\right)
++ f_n \left(\frac{1}{2} + \frac{2}{12} - \frac{3}{24}\right) \\
+&\quad + f_{n-1} \left(-\frac{1}{12} + \frac{3}{24}\right)
++ f_{n-2} \left(-\frac{1}{24}\right) \\
+&= \frac{9}{24}f_{n+1} + \frac{19}{24}f_n - \frac{5}{24}f_{n-1} + \frac{1}{24}f_{n-2}
+\end{aligned}
+$$
+
+### **3. AM4迭代格式（隐式）**
+
+$$
+\boxed{y_{n+1} = y_n + \frac{h}{24} \left( 9f_{n+1} + 19f_n - 5f_{n-1} + f_{n-2} \right)}
+$$
+其中 $f_{n+1} = f(t_{n+1}, y_{n+1})$ 依赖于待求的 $y_{n+1}$。
+
+### **4. AM4求解策略**
+
+- **固定点迭代**（简单但可能不收敛）：
+  $$
+  y_{n+1}^{(k+1)} = y_n + \frac{h}{24} \left( 9f(t_{n+1}, y_{n+1}^{(k)}) + 19f_n - 5f_{n-1} + f_{n-2} \right)
+  $$
+- **牛顿法**（推荐）：  
+  记 $F(y) = y - y_n - \frac{h}{24} \left( 9f(t_{n+1}, y) + C \right)$，求 $F(y)=0$。  
+  迭代：$y^{(k+1)} = y^{(k)} - \left[ I - \frac{9h}{24} f_y(t_{n+1}, y^{(k)}) \right]^{-1} F(y^{(k)})$
+
+### **5. AM4精度与优势**
+
+- **LTE = $\mathcal{O}(h^5)$**（比AB4高一阶，因插值含终点）  
+- **A-稳定区域更大**：比AB4更稳定（尤其对刚性问题）  
+- 常与AB4组成**预测-校正对**（PECE模式）：
+  1. **Predict**: 用AB4预测 $\tilde{y}_{n+1}$
+  2. **Evaluate**: 计算 $\tilde{f}_{n+1} = f(t_{n+1}, \tilde{y}_{n+1})$
+  3. **Correct**: 用AM4校正 $y_{n+1} = y_n + \frac{h}{24}(9\tilde{f}_{n+1} + 19f_n - 5f_{n-1} + f_{n-2})$
+  4. **Evaluate**: 更新 $f_{n+1} = f(t_{n+1}, y_{n+1})$（用于下一步）
+
+---
+
+## **方法对比与使用建议**
+
+| 方法       | 类型   | 公式                                                                 | 阶数 | 启动要求         | 推荐用途                     |
+|------------|--------|----------------------------------------------------------------------|------|------------------|------------------------------|
+| **AB2**    | 显式   | $y_{n+1} = y_n + \frac{h}{2}(3f_n - f_{n-1})$                      | 2    | 2点（$y_0,y_1$） | 快速原型，非刚性问题         |
+| **AB4**    | 显式   | $y_{n+1} = y_n + \frac{h}{24}(55f_n - 59f_{n-1} + 37f_{n-2} - 9f_{n-3})$ | 4    | 4点             | 高效高精度（非刚性）         |
+| **AM4**    | 隐式   | $y_{n+1} = y_n + \frac{h}{24}(9f_{n+1} + 19f_n - 5f_{n-1} + f_{n-2})$   | 4    | 3点             | 高精度+稳定性（或与AB4配对） |
+
+> **关键警告**：  
+>
+> - AB系列**绝对不稳定**（A-稳定区域为零），对刚性系统必发散。  
+> - 你的双摆问题**非刚性**（特征时间尺度相近），AB4完全适用。  
+> - 若做AM4，**必须用PECE模式**（避免昂贵的隐式求解器）。
+
+---
+
+## **在双摆问题中的实施建议**
+
+1. **AB4实现**：
+
+   ```matlab
+   % 假设已有 y_prev = [y_n; y_{n-1}; y_{n-2}; y_{n-3}] (4x4矩阵，每列一个状态)
+   f_n = f(t(n),   y_prev(:,1));
+   f_n1 = f(t(n-1), y_prev(:,2));
+   f_n2 = f(t(n-2), y_prev(:,3));
+   f_n3 = f(t(n-3), y_prev(:,4));
+   
+   y_new = y_prev(:,1) + h/24 * (55*f_n - 59*f_n1 + 37*f_n2 - 9*f_n3);
+   ```
+
+2. **AB4+AM4预测-校正**：
+
+   ```matlab
+   % Predict with AB4
+   y_pred = y_n + h/24 * (55*f_n - 59*f_n1 + 37*f_n2 - 9*f_n3);
+   f_pred = f(t_{n+1}, y_pred);
+   
+   % Correct with AM4
+   y_{n+1} = y_n + h/24 * (9*f_pred + 19*f_n - 5*f_n1 + f_n2);
+   ```
+
+3. **启动方案**：  
+   用RK4生成前4个点（$y_0, y_1, y_2, y_3$），存入历史缓存。
+
+推导完毕。这些公式是数值分析的基石，理解其来源可避免“调包式编程”。下一步可直接编码——若需AB4/AM4的MATLAB模板，我可立即提供。
 
 ## MATLAB程序实现
+
+一个小报错：
+
+```matlab
+Error: The variable 'm2' is perhaps intended as a reduction variable, but is actually an
+uninitialized temporary. For more information, see Parallel for Loops in MATLAB, "Temporary
+Variables Intended as Reduction Variables".
+
+Error in main (line 35)
+analyzeSensitivity(@doublePendulumODE, tspan, params, options);
+```
+
+## 不同算法的比较
+
+- Why 数据点都不一样多
+  - ODE45为自适应步长求解，等内置求解器是自适应步长，其内部机制不允许精确控制步长；
+  - 自实现算法多为固定步长，二者工作原理本质不同；
+  - 混沌系统的敏感性使直接比较长期轨迹失去意义
+- 如何在数据点不一样多的情况下进行比较（为什么选择这个方案进行比较）
+  - 统一时间网格插值法：能精确比较任意时间点的误差
+  - 误差指标计算方法：关键指标：L2Error、maxError、能量漂移，将大量数据压缩为几个关键指标，便于算法比较
+  - 事件点比较法：关注特定时间点的精度，大幅减少计算量，结果直观
+  - 自适应比较策略：针对系统动态特性进行智能比较，非线性系统如双摆，其动态特性在不同区域差异大
+  - 最终选择：采用统一时间网格插值法比较L2Error、maxError、能量漂移这3个关键指标的误差
+  - 差值方法选择：样条法
+- 比较结果:fourLAdamsMoultonMethod最好
+
+## 参数敏感性探究
+
+对于初值敏感的混沌系统比较位置没有太大意义，所以探究一些特定的物理指标：
+
+相空间分离 (Phase Space Separation)
+庞加莱截面 (Poincaré Section)
+最大李雅普诺夫指数 (MLE) 的参数扫描
+
+- l1/l2 → 比值
+- m1,m2 → 比值
+- theta1, theta2 单独探究
+
+## 附录
+
+- 绳和杆的讨论
+- 混沌系统的物理描述
+
+## 参考文献
+
+常用数值方法及其MATLAB实现
+数值计算
+Introduction to Numerical Analysis
+MATLABl理论力学
