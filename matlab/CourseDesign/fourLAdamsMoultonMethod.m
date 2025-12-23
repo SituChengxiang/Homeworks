@@ -2,14 +2,14 @@ function [t, z] = fourLAdamsMoultonMethod(odeFunc, tspan, z0, options)
 % 四阶隐式 Adams-Moulton 方法（Newton 迭代求解）
 
 if isfield(options, 'MaxStep'), h = options.MaxStep; else, h = (tspan(2)-tspan(1))/120000; end
-stepCount = ceil((tspan(2) - tspan(1)) / h);
+step_count = ceil((tspan(2) - tspan(1)) / h);
 
-t = linspace(tspan(1), tspan(2), stepCount + 1);
-numStates = numel(z0);
-z = zeros(numStates, stepCount + 1);
+t = linspace(tspan(1), tspan(2), step_count + 1);
+num_states = numel(z0);
+z = zeros(num_states, step_count + 1);
 z(:, 1) = z0(:);
 
-fVals = zeros(numStates, stepCount + 1);
+fVals = zeros(num_states, step_count + 1);
 fVals(:, 1) = odeFunc(t(1), z(:, 1));
 
 % 用标准RK4产生足够的历史信息供多步法使用
@@ -22,7 +22,7 @@ tol = 1e-9;
 maxIter = 8;
 
 % 啊巴啊巴没太看懂 但是改改能用
-for n = 4:stepCount
+for n = 4:step_count
     tNew = t(n+1);
     zNew = z(:, n) + (h/24)*(55*fVals(:,n) - 59*fVals(:,n-1) + 37*fVals(:,n-2) - 9*fVals(:,n-3));
 
@@ -34,7 +34,7 @@ for n = 4:stepCount
 
         if norm(res, inf) < tol, break; end
 
-        J = eye(numStates) - (h/720)*251*numericalJacobian(tNew, zNew, odeFunc, fNew);
+        J = eye(num_states) - (h/720)*251*numericalJacobian(tNew, zNew, odeFunc, fNew);
         zNew = zNew - J \ res;
 
         if norm(J \ res, inf) < tol, break; end
@@ -64,11 +64,11 @@ if nargin < 4
     fAtPoint = odeFunc(tPoint, zPoint);
 end
 
-numStates = numel(zPoint);
-J = zeros(numStates);
+num_states = numel(zPoint);
+J = zeros(num_states);
 perturbBase = sqrt(eps);
 
-for j = 1:numStates
+for j = 1:num_states
     step = perturbBase * max(1, abs(zPoint(j)));
     zShifted = zPoint;
     zShifted(j) = zShifted(j) + step;

@@ -297,7 +297,7 @@ legend('RK4 error', 'O(h^4)', 'Location', 'southwest');
 
 - **小球1位置**：
   $$
-  \begin{bmatrix} x_1 \\ y_1 \end{bmatrix} = \begin{bmatrix} l_1 \sin\theta_1 \\ l_1 \cos\theta_1 \end{bmatrix}
+  \vec{r_1}=\begin{bmatrix} x_1 \\ y_1 \end{bmatrix} = \begin{bmatrix} l_1 \sin\theta_1 \\ l_1 \cos\theta_1 \end{bmatrix}
   $$
 - **小球2位置**：
   $$
@@ -508,7 +508,7 @@ Warning: Matrix is singular, close to singular or badly scaled. Results may be i
 NaN. 
 > In main>doublePendulumODE (line 42)
 In main>@(tt,zz)doublePendulumODE(tt,zz,params) (line 19)
-In eularMethod (line 18)
+In eulerMethod (line 18)
 In main (line 19)
 ```
 
@@ -526,7 +526,7 @@ $$
 
 ### **1. 显式Euler方法 (Explicit Euler)**
 
-#### **Eular推导**
+#### **euler推导**
 
 1. **泰勒展开**：  
     $$
@@ -542,7 +542,7 @@ $$
     y_{n+1} = y_n + h f(t_n, y_n)
     $$
 
-#### **Eular关键特性**
+#### **euler关键特性**
 
 - **局部截断误差 (LTE)**：$\mathcal{O}(h^2)$
 - **全局截断误差 (GTE)**：$\mathcal{O}(h)$
@@ -585,36 +585,169 @@ $$
 
 #### **RK3推导**
 
-目标是构造一个三阶段方法，使其泰勒展开匹配到 $\mathcal{O}(h^3)$。
+三阶Runge–Kutta（RK3）方法的一般推导目标是构造一个单步显式方法，使得其局部截断误差为 $\mathcal{O}(h^4)$，即全局误差 $\mathcal{O}(h^3)$。
 
-1. **通用RK3形式**：
-    $$
-    \begin{aligned}
-    k_1 &= f(t_n, y_n) \\
-    k_2 &= f(t_n + \frac{h}{2}, y_n + \frac{h}{2} k_1) \\
-    k_3 &= f(t_n + h, y_n - h k_1 + 2h k_2) \\
-    y_{n+1} &= y_n + \frac{h}{6} (k_1 + 4k_2 + k_3)
-    \end{aligned}
-    $$
-    *（采用Kutta's 3rd-order scheme）*
+我们考虑初值问题：
+$$
+\dot{y} = f(t, y),\quad y(t_0) = y_0.
+$$
 
-2. **验证RK3精度**：  
-    将 $k_2, k_3$ 用泰勒展开至 $h^2$ 项：
-    $$
-    \begin{aligned}
-    k_2 &= f + \frac{h}{2} (f_t + f_y f) + \mathcal{O}(h^2) \\
-    k_3 &= f + h (-f_t - f_y f + 2f_t + 2f_y f) + \mathcal{O}(h^2) = f + h (f_t + f_y f) + \mathcal{O}(h^2)
-    \end{aligned}
-    $$
-    其中 $f = f(t_n, y_n)$, $f_t = \partial f/\partial t$, $f_y = \partial f/\partial y$。  
-    代入 $y_{n+1}$：
-    $$
-    \begin{aligned}
-    y_{n+1} &= y_n + \frac{h}{6} \left[ f + 4\left(f + \frac{h}{2}(f_t + f_y f)\right) + \left(f + h(f_t + f_y f)\right) \right] + \mathcal{O}(h^3) \\
-    &= y_n + h f + \frac{h^2}{2} (f_t + f_y f) + \mathcal{O}(h^3)
-    \end{aligned}
-    $$
-    与 $y(t_{n+1})$ 的二阶泰勒展开一致（因 $\ddot{y} = f_t + f_y f$）。
+设步长为 $h$，定义如下通用三级显式RK格式：
+
+$$
+\begin{aligned}
+k_1 &= f(t_n, y_n),\\
+k_2 &= f(t_n + a_2 h, \, y_n + h b_{21} k_1),\\
+k_3 &= f(t_n + a_3 h, \, y_n + h (b_{31} k_1 + b_{32} k_2)),\\
+y_{n+1} &= y_n + h (c_1 k_1 + c_2 k_2 + c_3 k_3).
+\end{aligned}
+$$
+
+其中待定系数：
+
+- $a_2$, $a_3$,
+- $b_{21}$, $b_{31}$, $b_{32}$,
+- $c_1$, $c_2$, $c_3$.
+
+---
+
+#### Step 1：将 $y(t_{n+1})$ 的真解 Taylor 展开（到 $h^3$）
+
+我们以 $t_n$ 为展开点，记 $y = y(t_n)$, $\dot y = f$, 再记
+
+$$
+\ddot y = \frac{d}{dt} f = f_t + f_y \dot y = f_t + f_y f,
+$$
+$$
+\overset{...}{y} = \frac{d^2}{dt^2} f = f_{tt} + 2 f_{ty} f + f_{yy} f^2 + f_y (f_t + f_y f).
+$$
+
+于是真解：
+
+$$
+\begin{aligned}
+y(t_{n+1}) &= y + h \dot y + \frac{h^2}{2!} \ddot y + \frac{h^3}{3!} \overset{...}{y} + \mathcal{O}(h^4)\\
+&= y + h f + \frac{h^2}{2}(f_t + f f_y) + \frac{h^3}{6}\big[f_{tt} + 2f_{ty}f + f_{yy} f^2 + f_y f_t + f_y^2 f\big] + \mathcal{O}(h^4).
+\end{aligned}
+\tag{1}
+$$
+
+---
+
+#### Step 2：将RK格式的 $y_{n+1}$ 展开到 $h^3$
+
+对 $k_2$，在 $(t_n, y_n)$ 处 Taylor 展开 $f$：
+
+$$
+\begin{aligned}
+k_2 &= f\big(t_n + a_2 h, y + h b_{21} f\big) \\
+&= f + a_2 h f_t + b_{21} h f f_y + \frac{h^2}{2} \Big[ a_2^2 f_{tt} + 2 a_2 b_{21} f f_{ty} + b_{21}^2 f^2 f_{yy} \Big] + \mathcal{O}(h^3).
+\end{aligned}
+$$
+
+同理对 $k_3$，先记中间点：
+
+$$
+\Delta y_3 = h (b_{31} k_1 + b_{32} k_2) = h (b_{31} + b_{32}) f + h^2 b_{32} (a_2 f_t + b_{21} f f_y) + \mathcal{O}(h^3),
+$$
+
+于是：
+
+$$
+\begin{aligned}
+k_3 &= f\big(t_n + a_3 h, y + \Delta y_3\big)\\
+&= f + a_3 h f_t + h (b_{31} + b_{32}) f f_y \\
+&\quad + \frac{h^2}{2} \Big[ a_3^2 f_{tt} + 2 a_3 (b_{31}+b_{32}) f f_{ty} + (b_{31}+b_{32})^2 f^2 f_{yy} \Big]\\
+&\quad + h^2 b_{32} \big(a_2 f_t + b_{21} f f_y \big) f_y + \mathcal{O}(h^3) \\
+&= f + a_3 h f_t + (b_{31}+b_{32}) h f f_y \\
+&\quad + h^2\Big[ \frac{a_3^2}{2} f_{tt} + a_3 (b_{31}+b_{32}) f f_{ty} + \frac{(b_{31}+b_{32})^2}{2} f^2 f_{yy} \\
+&\qquad\quad + a_2 b_{32} f_t f_y + b_{21} b_{32} f f_y^2 \Big] + \mathcal{O}(h^3).
+\end{aligned}
+$$
+
+现在代入更新式：
+
+$$
+\begin{aligned}
+y_{n+1} &= y + h(c_1 k_1 + c_2 k_2 + c_3 k_3) \\
+&= y + h(c_1 + c_2 + c_3)f \\
+&\quad + h^2\Big[ c_2(a_2 f_t + b_{21} f f_y) + c_3\big(a_3 f_t + (b_{31}+b_{32}) f f_y \big) \Big] \\
+&\quad + h^3\Bigg\{
+c_2\frac{1}{2}\big[ a_2^2 f_{tt} + 2a_2 b_{21} f f_{ty} + b_{21}^2 f^2 f_{yy} \big] \\
+&\qquad + c_3\big[ \frac{a_3^2}{2} f_{tt} + a_3 (b_{31}+b_{32}) f f_{ty} + \frac{(b_{31}+b_{32})^2}{2} f^2 f_{yy} \\
+&\qquad\qquad + a_2 b_{32} f_t f_y + b_{21} b_{32} f f_y^2 \big]
+\Bigg\} + \mathcal{O}(h^4).
+\end{aligned}
+\tag{2}
+$$
+
+---
+
+#### Step 3：匹配泰勒展开系数
+
+将 (2) 与 (1) 逐项对比。注意 (1) 中没有 $f_t f_y$ 项单独出现，而是通过 $f_y f_t$ 合并在 $\overset{...}{y}$ 的表达中，因此必须匹配组合项。
+
+#### Order $h^1$:
+
+$$
+c_1 + c_2 + c_3 = 1 \quad\text{(A1)}
+$$
+
+#### Order $h^2$：
+
+- $f_t$ 项：$c_2 a_2 + c_3 a_3 = \frac{1}{2}$  (A2)
+- $f f_y$ 项：$c_2 b_{21} + c_3 (b_{31} + b_{32}) = \frac{1}{2}$  (A3)
+
+#### Order $h^3$：
+
+- $f_{tt}$：$\frac{1}{2} c_2 a_2^2 + \frac{1}{2} c_3 a_3^2 = \frac{1}{6}$  (A4)
+- $f f_{ty}$：$c_2 a_2 b_{21} + c_3 a_3 (b_{31}+b_{32}) = \frac{1}{3}$  (A5)
+- $f^2 f_{yy}$：$\frac{1}{2} c_2 b_{21}^2 + \frac{1}{2} c_3 (b_{31}+b_{32})^2 = \frac{1}{6}$  (A6)
+- $f_t f_y$：$c_3 a_2 b_{32} = \frac{1}{6}$  (A7)
+- $f f_y^2$：$c_3 b_{21} b_{32} = \frac{1}{6}$  (A8)
+
+我们有 8 个方程，但仅有 8 个未知数，不过并非所有独立（有些是冗余）。标准三阶RK通常取简化结构，例如：
+
+- 常用经典三阶RK（Kutta’s third-order method）取：
+  $$
+  a_2 = \frac{1}{2},\quad a_3 = 1,
+  $$
+  $$
+  b_{21} = \frac{1}{2},\quad b_{31} = -1,\quad b_{32} = 2,
+  $$
+  $$
+  c_1 = \frac{1}{6},\quad c_2 = \frac{2}{3},\quad c_3 = \frac{1}{6}.
+  $$
+
+验证是否满足条件：
+
+- (A1): $1/6 + 2/3 + 1/6 = 1$ ✓  
+- (A2): $c_2 a_2 + c_3 a_3 = \frac{2}{3} \cdot \frac{1}{2} + \frac{1}{6} \cdot 1 = \frac{1}{3} + \frac{1}{6} = \frac{1}{2}$ ✓  
+- (A3): $c_2 b_{21} + c_3 (b_{31}+b_{32}) = \frac{2}{3} \cdot \frac{1}{2} + \frac{1}{6} \cdot (-1+2) = \frac{1}{3} + \frac{1}{6} = \frac{1}{2}$ ✓  
+- (A4): $\frac{1}{2} c_2 a_2^2 + \frac{1}{2} c_3 a_3^2 = \frac{1}{2} \cdot \frac{2}{3} \cdot \frac{1}{4} + \frac{1}{2} \cdot \frac{1}{6} \cdot 1 = \frac{1}{12} + \frac{1}{12} = \frac{1}{6}$ ✓  
+- (A5): $c_2 a_2 b_{21} + c_3 a_3 (b_{31}+b_{32}) = \frac{2}{3} \cdot \frac{1}{2} \cdot \frac{1}{2} + \frac{1}{6} \cdot 1 \cdot 1 = \frac{1}{6} + \frac{1}{6} = \frac{1}{3}$ ✓  
+- (A6): $\frac{1}{2} c_2 b_{21}^2 + \frac{1}{2} c_3 (1)^2 = \frac{1}{2} \cdot \frac{2}{3} \cdot \frac{1}{4} + \frac{1}{2} \cdot \frac{1}{6} = \frac{1}{12} + \frac{1}{12} = \frac{1}{6}$ ✓  
+- (A7): $c_3 a_2 b_{32} = \frac{1}{6} \cdot \frac{1}{2} \cdot 2 = \frac{1}{6}$ ✓  
+- (A8): $c_3 b_{21} b_{32} = \frac{1}{6} \cdot \frac{1}{2} \cdot 2 = \frac{1}{6}$ ✓
+
+全部满足。
+
+---
+
+#### 最终三阶RK公式（Kutta’s third-order method）：
+
+$$
+\begin{aligned}
+k_1 &= f(t_n, y_n),\\
+k_2 &= f\!\left(t_n + \frac{h}{2},\, y_n + \frac{h}{2} k_1\right),\\
+k_3 &= f\!\left(t_n + h,\, y_n - h k_1 + 2h k_2\right),\\
+y_{n+1} &= y_n + \frac{h}{6}\left(k_1 + 4k_2 + k_3\right).
+\end{aligned}
+$$
+
+> 注：注意 $c_2 = \frac{2}{3} = \frac{4}{6}$，故权重写作 $\frac{1}{6},\frac{4}{6},\frac{1}{6}$，即 $1-4-1$ 结构，但中间 stage 的 argument 是非对称的（$k_3$ 用了 $-k_1 + 2k_2$），这是它与 Simpson-type 的本质差别。
+
+若你需要其他三阶RK（如 Heun’s 三阶、或 SSP-RK3），我也可以推导。当前这个是最经典的。推导过程是否需进一步解释某步？
 
 #### **RK3关键特性**
 
