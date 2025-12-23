@@ -2,14 +2,14 @@ function [t, z] = fourLAdamsMethod(odeFunc, tspan, z0, options)
 % 四阶 Adams-Bashforth 显式多步法
 
 if isfield(options, 'MaxStep'), h = options.MaxStep; else, h = (tspan(2)-tspan(1))/120000; end
-stepCount = ceil((tspan(2) - tspan(1)) / h);
+step_count = ceil((tspan(2) - tspan(1)) / h);
 
-t = linspace(tspan(1), tspan(2), stepCount + 1);
-numStates = numel(z0);
-z = zeros(numStates, stepCount + 1);
+t = linspace(tspan(1), tspan(2), step_count + 1);
+num_states = numel(z0);
+z = zeros(num_states, step_count + 1);
 z(:, 1) = z0(:);
 
-fVals = zeros(numStates, stepCount + 1);
+fVals = zeros(num_states, step_count + 1);
 fVals(:, 1) = odeFunc(t(1), z(:, 1));
 
 % 用 RK4 预热前三个步长，提供多步法所需历史。
@@ -18,7 +18,7 @@ for bootstrap = 1:3
     fVals(:, bootstrap + 1) = odeFunc(t(bootstrap + 1), z(:, bootstrap + 1));
 end
 
-for n = 4:stepCount
+for n = 4:step_count
     z(:, n + 1) = z(:, n) + (h / 24) * (55 * fVals(:, n) - 59 * fVals(:, n - 1) + 37 * fVals(:, n - 2) - 9 * fVals(:, n - 3));
     fVals(:, n + 1) = odeFunc(t(n + 1), z(:, n + 1));
 end

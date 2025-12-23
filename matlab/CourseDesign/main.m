@@ -10,7 +10,7 @@ options = odeset('RelTol', 1e-10, 'AbsTol', 1e-12, 'MaxStep', 0.0005);
 
 % 各种算法生成参考解，如果想看动画在这里取消掉对应的算法的注释
 % [t, z] = ode45(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
-% [t, z] = eularMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
+% [t, z] = eulerMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = heunMethod(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = threeLRK(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
 % [t, z] = fourLRK(@(tt, zz) doublePendulumODE(tt, zz, params), tspan, z0, options);
@@ -20,21 +20,24 @@ options = odeset('RelTol', 1e-10, 'AbsTol', 1e-12, 'MaxStep', 0.0005);
 
 %% 精度对比
 solversList = {
-    % @eularMethod, 'Euler';
-    % @heunMethod, 'Heun';
-    % @threeLRK, 'RK3';
-    % @fourLRK, 'RK4';
-    % @twoLAdamsMethod, 'Adams2';
-    % @fourLAdamsMethod, 'Adams4';
-    % @fourLAdamsMoultonMethod, 'AdamsMoulton4'
+    @eulerMethod, 'Euler';
+    @heunMethod, 'Heun';
+    @threeLRK, 'RK3';
+    @fourLRK, 'RK4';
+    @twoLAdamsMethod, 'Adams2';
+    @fourLAdamsMethod, 'Adams4';
+    @fourLAdamsMoultonMethod, 'AdamsMoulton4'
 };
-% compareSolvers(@doublePendulumODE, tspan, z0, params, solversList, options);
+if ~isempty(solversList), compareSolvers(@doublePendulumODE, tspan, z0, params, solversList, options); end
 
+%% 误差分析
+% 在solversList 中取消注释对应部分
+if ~isempty(solversList), analyzeError(@doublePendulumODE, [0, 100], z0, params, solversList); end
 
 %% 敏感性分析
-analyzeSensitivity(@doublePendulumODE, tspan, params, options);
+% analyzeSensitivity(@doublePendulumODE, tspan, params, options);
 
-% 计算两端点在平面中的轨迹坐标，并将所有状态合并到一个矩阵中 [t, x1, y1, x2, y2]^T 便于后续研究
+% 【想看动画或者看下面的轨迹请取消注释】计算两端点在平面中的轨迹坐标，并将所有状态合并到一个矩阵中 [t, x1, y1, x2, y2]^T 便于后续研究
 % x1 = l1 * sin(z(:, 1));
 % y1 = -l1 * cos(z(:, 1));
 % x2 = x1 + l2 * sin(z(:, 2));
@@ -106,9 +109,9 @@ analyzeSensitivity(@doublePendulumODE, tspan, params, options);
 % frameSkip = max(1, round(numel(t) / 1800));
 % % 瞎选的参数 反正能看效果
 % for idx = 1:frameSkip:numel(t)
-%     currentFrame = trajectory(:, idx);
-%     cx1 = currentFrame(2); cy1 = currentFrame(3);
-%     cx2 = currentFrame(4); cy2 = currentFrame(5);
+%     current_frame = trajectory(:, idx);
+%     cx1 = current_frame(2); cy1 = current_frame(3);
+%     cx2 = current_frame(4); cy2 = current_frame(5);
 
 %     set(rod1, 'XData', [0, cx1], 'YData', [0, cy1]);
 %     set(rod2, 'XData', [cx1, cx2], 'YData', [cy1, cy2]);
