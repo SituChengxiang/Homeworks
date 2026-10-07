@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>晶胞立体图 · SC / BCC / FCC / Wigner-Seitz</title>
+<style>
+  :root {
+    --bg: #070b16;
+    --panel: rgba(19, 26, 45, 0.92);
+    --panel-2: rgba(28, 37, 62, 0.9);
+    --line: rgba(120, 145, 200, 0.22);
+    --txt: #e8eefc;
+    --muted: #93a1c2;
+    --accent: #22d3ee;
+    --corner: #6ea8fe;
+    --face: #ffb454;
+    --body: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(1200px 800px at 70% -10%, #17233f 0%, var(--bg) 55%);
+    color: var(--txt);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow: hidden;
+  }
+  #app {
+    display: grid;
+    grid-template-columns: 340px 1fr 320px;
+    height: 100vh;
+    gap: 14px;
+    padding: 14px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+  }
+
+  /* ---------- 左侧控制面板 ---------- */
+  #side {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+  }
+  h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .3px; }
+  .sub { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+  .section-title {
+    font-size: 12px; color: var(--muted);
+    letter-spacing: .12em; text-transform: uppercase;
+    margin-bottom: 9px;
+  }
+
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .seg button {
+    appearance: none; cursor: pointer;
+    padding: 12px 6px; border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--txt);
+    font-size: 13px; font-weight: 600;
+    transition: .18s;
+  }
+  .seg button:hover { border-color: rgba(34, 211, 238, .6); }
+  .seg button.active {
+    background: linear-gradient(180deg, rgba(34,211,238,.28), rgba(34,211,238,.12));
+    border-color: var(--accent);
+    color: #d8fbff;
+    box-shadow: 0 0 0 1px rgba(34,211,238,.35), 0 6px 20px -8px rgba(34,211,238,.7);
+  }
+  .seg button small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+  .seg button.active small { color: #a8eef7; }
+
+  .toggles { display: flex; flex-direction: column; gap: 2px; }
+  .switch {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 4px; cursor: pointer; font-size: 13.5px;
+    border-radius: 9px;
+  }
+  .switch:hover { background: rgba(255,255,255,.04); }
+  .switch input { display: none; }
+  .track {
+    width: 40px; height: 22px; border-radius: 999px;
+    background: rgba(255,255,255,.13);
+    position: relative; transition: .18s; flex: 0 0 auto;
+  }
+  .track::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #cbd5e1; transition: .18s;
+  }
+  .switch input:checked + .track { background: rgba(34,211,238,.55); }
+  .switch input:checked + .track::after { left: 21px; background: #eafeff; }
+
+  .slider-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; border-radius: 4px;
+    background: rgba(255,255,255,.16); outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid #062026;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    cursor: pointer; border: 2px solid #062026;
+  }
+  #rVal { width: 34px; text-align: right; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  .btn {
+    appearance: none; cursor: pointer; width: 100%;
+    padding: 11px; border-radius: 11px;
+    background: var(--panel-2); color: var(--txt);
+    border: 1px solid var(--line); font-size: 13px; font-weight: 600;
+  }
+  .btn:hover { border-color: rgba(34,211,238,.6); }
+
+  .legend-atoms { display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; color: var(--muted); }
+  .legend-atoms div { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto; }
+
+  /* ---------- 中间画布 ---------- */
+  #stage { position: relative; overflow: hidden; min-height: 0; }
+  #scene { display: block; width: 100%; height: 100%; }
+  .hint {
+    position: absolute; left: 14px; bottom: 12px;
+    font-size: 11.5px; color: rgba(200,215,245,.55);
+    background: rgba(8,12,24,.55); padding: 6px 10px; border-radius: 8px;
+    pointer-events: none;
+  }
+  .badge {
+    position: absolute; left: 14px; top: 14px;
+    font-size: 12px; color: #cdeff7;
+    background: rgba(8,12,24,.6); border: 1px solid var(--line);
+    padding: 6px 11px; border-radius: 999px; pointer-events: none;
+  }
+
+  /* ---------- 右侧信息面板 ---------- */
+  #info { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  #infoTitle { font-size: 15.5px; margin: 0; }
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: flex; gap: 12px; justify-content: space-between;
+    padding: 8px 0; font-size: 12.8px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .k { color: var(--muted); flex: 0 0 auto; }
+  .row .val { text-align: right; line-height: 1.5; }
+  .row .val b { color: var(--accent); }
+
+  .note {
+    font-size: 12.5px; line-height: 1.7; color: #b9c6e2;
+    background: rgba(34,211,238,.07);
+    border-left: 3px solid var(--accent);
+    padding: 11px 13px; border-radius: 0 10px 10px 0;
+  }
+  .howto { font-size: 12.3px; color: var(--muted); line-height: 1.75; }
+  .howto b { color: #d8e3fb; }
+  .howto ol { margin: 6px 0 0; padding-left: 18px; }
+  .howto li { margin-bottom: 3px; }
+
+  #nnLegend { display: none; font-size: 12px; color: var(--muted); }
+  .legend-title { font-size: 11px; letter-spacing: .1em; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; }
+  .lg { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+  .lg i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  h2 { font-size: 13px; margin: 0; color: #cfe0ff; }
+
+  @media (max-width: 1080px) {
+    body { overflow: auto; }
+    #app { grid-template-columns: 1fr; height: auto; }
+    #stage { height: 62vh; }
+    #side, #info { max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 左：控制 -->
+  <aside id="side" class="card">
+    <div>
+      <h1>晶胞立体图</h1>
+      <p class="sub">SC / BCC / FCC 惯用晶胞与 Wigner–Seitz 原胞 · 固体物理</p>
+    </div>
+
+    <div>
+      <div class="section-title">选择结构</div>
+      <div class="seg" id="structSel">
+        <button data-s="SC">SC<small>简立方</small></button>
+        <button data-s="BCC">BCC<small>体心立方</small></button>
+        <button data-s="FCC">FCC<small>面心立方</small></button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">显示选项</div>
+      <div class="toggles">
+        <label class="switch">原子 <input type="checkbox" id="tAtoms"><span class="track"></span></label>
+        <label class="switch">晶胞棱框 <input type="checkbox" id="tCell"><span class="track"></span></label>
+        <label class="switch">最近邻键 <input type="checkbox" id="tBonds"><span class="track"></span></label>
+        <label class="switch">WS 原胞 <input type="checkbox" id="tWS"><span class="track"></span></label>
+        <label class="switch">近邻方向（构造）<input type="checkbox" id="tNeighbors"><span class="track"></span></label>
+        <label class="switch">扩展晶格点云 <input type="checkbox" id="tExtended"><span class="track"></span></label>
+        <label class="switch">WS 原胞平铺 <input type="checkbox" id="tTiling"><span class="track"></span></label>
+        <label class="switch">坐标轴 a/b/c <input type="checkbox" id="tAxes"><span class="track"></span></label>
+        <label class="switch">自动旋转 <input type="checkbox" id="tRotate"><span class="track"></span></label>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">原子半径</div>
+      <div class="slider-row">
+        <input type="range" id="rScale" min="0.25" max="1" step="0.01">
+        <span id="rVal"></span>
+      </div>
+      <p class="sub" style="margin-top:8px">拉到 1.00 即“刚球接触”，可直接看出堆积率。</p>
+    </div>
+
+    <div>
+      <div class="section-title">扩展范围</div>
+      <div class="slider-row">
+        <input type="range" id="range" min="1.5" max="4" step="0.5">
+        <span id="rangeVal"></span>
+      </div>
+      <p class="sub" style="margin-top:8px">控制“扩展晶格点云”的范围（单位 a）。</p>
+    </div>
+
+    <button class="btn" id="resetView">重置视角</button>
+
+    <div>
+      <div class="section-title">原子颜色</div>
+      <div class="legend-atoms">
+        <div><span class="dot" style="background:var(--corner)"></span>顶角原子（8 × 1/8）</div>
+        <div><span class="dot" style="background:var(--body)"></span>体心原子（1）</div>
+        <div><span class="dot" style="background:var(--face)"></span>面心原子（6 × 1/2）</div>
+        <div><span class="dot" style="background:var(--accent);opacity:.65"></span>WS 原胞</div>
+      </div>
+    </div>
+
+    <div id="nnLegend"></div>
+  </aside>
+
+  <!-- 中：3D -->
+  <main id="stage" class="card">
+    <canvas id="scene"></canvas>
+    <div class="badge" id="stageBadge">拖拽旋转 · 滚轮缩放 · 右键平移</div>
+    <div class="hint">WS 原胞由“近邻中垂面”实时裁剪生成</div>
+  </main>
+
+  <!-- 右：信息 -->
+  <aside id="info" class="card">
+    <h2 id="infoTitle">—</h2>
+    <div class="rows" id="infoRows"></div>
+    <div class="note" id="infoNote"></div>
+
+    <div>
+      <div class="section-title">WS 原胞怎么来的？</div>
+      <div class="howto">
+        Wigner–Seitz 原胞是离某个格点比离任何其他格点都更近的空间区域：
+        <ol>
+          <li>取一个格点为中心；</li>
+          <li>向所有近邻、次近邻格点连线；</li>
+          <li>作每条连线的<b>中垂面</b>；</li>
+          <li>这些中垂面围成的最小多面体就是 WS 原胞。</li>
+        </ol>
+        它只含 <b>1 个格点</b>，体积等于 a³/n，而且能无缝填满整个空间。
+        打开左侧“近邻方向（构造）”即可看到这些连线。
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>

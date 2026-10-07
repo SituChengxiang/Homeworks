@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>无限晶格 WS 原胞可视化</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    background: #050810;
+    color: #e4e7ec;
+    overflow: hidden;
+  }
+  #canvas-container { position: fixed; inset: 0; }
+  
+  .panel {
+    position: fixed;
+    background: rgba(15, 20, 35, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  
+  #top-bar {
+    top: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; padding: 6px;
+  }
+  .btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #c0c5d0;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .btn.active {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 2px 12px rgba(59,130,246,0.4);
+  }
+  
+  #info-panel {
+    top: 70px; left: 16px; width: 260px; font-size: 12px; line-height: 1.6;
+  }
+  #info-panel h2 { font-size: 16px; margin-bottom: 8px; color: #60a5fa; }
+  .row { display: flex; justify-content: space-between; padding: 3px 0; }
+  .label { color: #6b7280; }
+  .value { color: #e5e7eb; font-weight: 500; }
+  .desc { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); color: #9ca3af; }
+  
+  #controls { bottom: 16px; left: 16px; font-size: 12px; }
+  .toggle { display: flex; align-items: center; gap: 6px; padding: 4px 0; cursor: pointer; user-select: none; }
+  .toggle input { accent-color: #3b82f6; }
+  
+  #hint { bottom: 16px; right: 16px; font-size: 11px; color: #6b7280; padding: 8px 12px; }
+  
+  /* 加载提示 */
+  #loading {
+    position: fixed; inset: 0; background: #050810;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; transition: opacity 0.5s;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid rgba(59,130,246,0.2);
+    border-top-color: #3b82f6; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div></div>
+<div id="canvas-container"></div>
+
+<div id="top-bar" class="panel">
+  <button class="btn active" data-type="SC">SC 简单立方</button>
+  <button class="btn" data-type="BCC">BCC 体心立方</button>
+  <button class="btn" data-type="FCC">FCC 面心立方</button>
+</div>
+
+<div id="info-panel" class="panel">
+  <h2 id="title">简单立方 (SC)</h2>
+  <div class="row"><span class="label">WS原胞形状</span><span class="value" id="shape">立方体</span></div>
+  <div class="row"><span class="label">面数</span><span class="value" id="faces">6</span></div>
+  <div class="row"><span class="label">最近邻数</span><span class="value" id="neighbors">6</span></div>
+  <div class="row"><span class="label">配位数</span><span class="value" id="coordination">6</span></div>
+  <div class="desc" id="desc">以格点为中心，作与6个最近邻连线的垂直平分面，围成一个立方体。</div>
+</div>
+
+<div id="controls" class="panel">
+  <label class="toggle"><input type="checkbox" id="show-ws" checked>高亮中心WS原胞</label>
+  <label class="toggle"><input type="checkbox" id="show-lattice" checked>显示晶格格点</label>
+  <label class="toggle"><input type="checkbox" id="show-bonds" checked>显示近邻连线</label>
+  <label class="toggle"><input type="checkbox" id="auto-rotate" checked>自动旋转</label>
+</div>
+
+<div id="hint" class="panel">鼠标左键：旋转 ｜ 滚轮：缩放 ｜ 右键：平移</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
+
+// ============ 场景初始化 ============
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050810);
+scene.fog = new THREE.FogExp2(0x050810, 0.035);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(5, 4, 6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.6;
+controls.maxDistance = 20;
+controls.minDistance = 2;
+
+// ============ 灯光 ============
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+dirLight.position.set(5, 10, 5);
+scene.add(dirLight);
+const fillLight = new THREE.DirectionalLight(0x60a5fa, 0.3);
+fillLight.position.set(-5, -5, -5);
+scene.add(fillLight);
+
+// ============ 坐标轴 ============
+const axesGroup = new THREE.Group();
+const axisLen = 4;
+[0,1,2].forEach(i => {
+  const dir = new THREE.Vector3(i===0?1:0, i===1?1:0, i===2?1:0);
+  const colors = [0xff5555, 0x55ff55, 0x5599ff];
+  const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(), axisLen, colors[i], 0.2, 0.12);
+  axesGroup.add(arrow);
+});
+scene.add(axesGroup);
+
+// ============ WS原胞几何数据 ============
+function genTruncatedOctahedron(scale) {
+  const perms = [[0,1,2],[0,2,1],[1,0,2],[2,0,1],[1,2,0],[2,1,0]];
+  const verts = [];
+  perms.forEach(p => {
+    for (let s1 of [-1,1]) for (let s2 of [-1,1]) {
+      const v = [0,0,0];
+      v[p[0]] = 0; v[p[1]] = s1*1; v[p[2]] = s2*2;
+      verts.push([v[0]*scale, v[1]*scale, v[2]*scale]);
+    }
+  });
+  return verts;
+}
+
+function genRhombicDodecahedron(scale) {
+  const verts = [];
+  for (let x of [-1,1]) for (let y of [-1,1]) for (let z of [-1,1]) {
+    verts.push([x*scale, y*scale, z*scale]);
+  }
+  verts.push([2*scale,0,0],[-2*scale,0,0],[0,2*scale,0],[0,-2*scale,0],[0,0,2*scale],[0,0,-2*scale]);
+  return verts;
+}
+
+const wsData = {
+  SC: {
+    wsVertices: [[-0.5,-0.5,-0.5],[0.5,-0.5,-0.5],[0.5,0.5,-0.5],[-0.5,0.5,-0.5],[-0.5,-0.5,0.5],[0.5,-0.5,0.5],[0.5,0.5,0.5],[-0.5,0.5,0.5]],
+    latticeType: 'sc',
+    a: 1,
+    title: '简单立方 (SC)', shape: '立方体', faces: 6, neighbors: 6, coordination: 6,
+    desc: '每个格点有6个最近邻。WS原胞是边长为a的立方体，体积为a³。'
+  },
+  BCC: {
+    wsVertices: genTruncatedOctahedron(1/2.2),
+    latticeType: 'bcc',
+    a: 1,
+    title: '体心立方 (BCC)', shape: '截角八面体', faces: 14, neighbors: 8, coordination: 8,
+    desc: '8个最近邻在体对角线方向，6个次近邻沿轴方向。WS原胞是截角八面体（14面体）。'
+  },
+  FCC: {
+    wsVertices: genRhombicDodecahedron(1/2),
+    latticeType: 'fcc',
+    a: 1,
+    title: '面心立方 (FCC)', shape: '菱形十二面体', faces: 12, neighbors: 12, coordination: 12,
+    desc: '12个最近邻在面心位置。WS原胞是菱形十二面体，由12个全等菱形组成。'
+  }
+};
+
+// ============ 生成晶格点 ============
+function generateLatticePoints(type, range) {
+  const points = [];
+  const a = 1;
+  
+  if (type === 'sc') {
+    for (let x = -range; x <= range; x++)
+      for (let y = -range; y <= range; y++)
+        for (let z = -range; z <= range; z++)
+          points.push([x*a, y*a, z*a]);
+  } else if (type === 'bcc') {
+    // BCC: 简单立方格点 + 体心偏移
+    for (let x = -range; x <= range; x++)
+      for (let y = -range; y <= range; y++)
+        for (let z = -range; z <= range; z++) {
+          points.push([x*a, y*a, z*a]);
+          points.push([(x+0.5)*a, (y+0.5)*a, (z+0.5)*a]);
+        }
+  } else if (type === 'fcc') {
+    // FCC: 简单立方格点 + 三个面心偏移
+    for (let x = -range; x <= range; x++)
+      for (let y = -range; y <= range; y++)
+        for (let z = -range; z <= range; z++) {
+          points.push([x*a, y*a, z*a]);
+          points.push([(x+0.5)*a, (y+0.5)*a, z*a]);
+          points.push([(x+0.5)*a, y*a, (z+0.5)*a]);
+          points.push([x*a, (y+0.5)*a, (z+0.5)*a]);
+        }
+  }
+  return points;
+}
+
+// ============ 构建场景内容 ============
+const modelGroup = new THREE.Group();
+scene.add(modelGroup);
+
+let currentType = 'SC';
+let latticePoints = [];
+
+function buildScene(type) {
+  // 清空
+  while (modelGroup.children.length) {
+    const c = modelGroup.children[0];
+    modelGroup.remove(c);
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) {
+      if (Array.isArray(c.material)) c.material.forEach(m=>m.dispose());
+      else c.material.dispose();
+    }
+  }
+  
+  const data = wsData[type];
+  const color = type === 'SC' ? 0x3b82f6 : type === 'BCC' ? 0xf87171 : 0x34d399;
+  const baseColor = new THREE.Color(color);
+  
+  // 1. 生成晶格点
+  const range = 3;
+  latticePoints = generateLatticePoints(data.latticeType, range);
+  
+  // 2. 所有格点球体（InstancedMesh 优化性能）
+  const sphereGeom = new THREE.SphereGeometry(0.06, 16, 12);
+  const sphereMat = new THREE.MeshPhysicalMaterial({
+    color: 0xc0c5d0,
+    roughness: 0.4,
+    metalness: 0.2
+  });
+  const instancedSpheres = new THREE.InstancedMesh(sphereGeom, sphereMat, latticePoints.length);
+  const dummy = new THREE.Object3D();
+  latticePoints.forEach((p, i) => {
+    dummy.position.set(p[0], p[1], p[2]);
+    dummy.updateMatrix();
+    instancedSpheres.setMatrixAt(i, dummy.matrix);
+  });
+  instancedSpheres.instanceMatrix.needsUpdate = true;
+  modelGroup.add(instancedSpheres);
+  
+  // 3. 中心WS原胞（高亮）
+  const wsPoints = data.wsVertices.map(v => new THREE.Vector3(v[0], v[1], v[2]));
+  const wsGeom = new ConvexGeometry(wsPoints);
+  
+  // WS面
+  const faceMat = new THREE.MeshPhysicalMaterial({
+    color: baseColor,
+    transparent: true,
+    opacity: 0.15,
+    roughness: 0.2,
+    metalness: 0.1,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  const wsMesh = new THREE.Mesh(wsGeom, faceMat);
+  wsMesh.name = 'wsFace';
+  modelGroup.add(wsMesh);
+  
+  // WS边
+  const edgesGeom = new THREE.EdgesGeometry(wsGeom, 1);
+  const edgeMat = new THREE.LineBasicMaterial({ color: baseColor, linewidth: 2 });
+  const edges = new THREE.LineSegments(edgesGeom, edgeMat);
+  edges.name = 'wsEdge';
+  modelGroup.add(edges);
+  
+  // 4. 中心原子（白色高亮）
+  const centerSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1, 24, 16),
+    new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      emissive: baseColor,
+      emissiveIntensity: 0.6,
+      roughness: 0.2,
+      metalness: 0.3
+    })
+  );
+  centerSphere.name = 'centerAtom';
+  modelGroup.add(centerSphere);
+  
+  // 5. 中心到最近邻的连线
+  const linesGroup = new THREE.Group();
+  linesGroup.name = 'bonds';
+  
+  // 找出最近邻（距离最小的那些点）
+  const center = [0, 0, 0];
+  let minDist = Infinity;
+  latticePoints.forEach(p => {
+    if (p[0] === 0 && p[1] === 0 && p[2] === 0) return;
+    const d = Math.sqrt(p[0]**2 + p[1]**2 + p[2]**2);
+    if (d < minDist) minDist = d;
+  });
+  
+  const bondMat = new THREE.LineDashedMaterial({
+    color: baseColor,
+    dashSize: 0.06,
+    gapSize: 0.04,
+    transparent: true,
+    opacity: 0.4
+  });
+  
+  latticePoints.forEach(p => {
+    if (p[0] === 0 && p[1] === 0 && p[2] === 0) return;
+    const d = Math.sqrt(p[0]**2 + p[1]**2 + p[2]**2);
+    if (Math.abs(d - minDist) < 0.01) {
+      const geom = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(p[0], p[1], p[2])
+      ]);
+      const line = new THREE.Line(geom, bondMat);
+      line.computeLineDistances();
+      linesGroup.add(line);
+    }
+  });
+  modelGroup.add(linesGroup);
+  
+  // 更新UI
+  document.getElementById('title').textContent = data.title;
+  document.getElementById('shape').textContent = data.shape;
+  document.getElementById('faces').textContent = data.faces;
+  document.getElementById('neighbors').textContent = data.neighbors;
+  document.getElementById('coordination').textContent = data.coordination;
+  document.getElementById('desc').textContent = data.desc;
+  document.getElementById('title').style.color = '#' + baseColor.getHexString();
+  
+  // 同步可见性
+  applyVisibility();
+}
+
+function applyVisibility() {
+  const showWS = document.getElementById('show-ws').checked;
+  const showLattice = document.getElementById('show-lattice').checked;
+  const showBonds = document.getElementById('show-bonds').checked;
+  
+  modelGroup.traverse(child => {
+    if (child.name === 'wsFace' || child.name === 'wsEdge') child.visible = showWS;
+    if (child.isInstancedMesh) child.visible = showLattice;
+    if (child.name === 'centerAtom') child.visible = showLattice;
+    if (child.name === 'bonds') child.visible = showBonds;
+  });
+}
+
+buildScene('SC');
+
+// ============ 事件绑定 ============
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentType = btn.dataset.type;
+    buildScene(currentType);
+  });
+});
+
+['show-ws', 'show-lattice', 'show-bonds'].forEach(id => {
+  document.getElementById(id).addEventListener('change', applyVisibility);
+});
+
+document.getElementById('auto-rotate').addEventListener('change', e => {
+  controls.autoRotate = e.target.checked;
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// 隐藏加载动画
+setTimeout(() => {
+  document.getElementById('loading').style.opacity = 0;
+  setTimeout(() => document.getElementById('loading').style.display = 'none', 500);
+}, 800);
+
+// ============ 动画循环 ============
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
