@@ -3,7 +3,6 @@
 #include <string.h>
 #include "units.h"
 #include "cases.h"
-#include "stepper.h"
 #include "trajectory.h"
 #include "rutherford.h"
 #include "export.h"
@@ -71,8 +70,12 @@ int main(int argc, char **argv)
 			ctl.dt = atof(argv[++i]);
 		} else if (strcmp(argv[i], "--manual") == 0) {
 			ctl.integrator = INTEGRATOR_MANUAL;
+		} else if (strcmp(argv[i], "--utf8") == 0) {
+			console_set_ascii(0);
+		} else if (strcmp(argv[i], "--ascii") == 0) {
+			console_set_ascii(1);
 		} else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-			printf("用法: %s [输出目录] [-t 时长] [-dt 步长] [--manual]\n",
+			printf("usage: %s [outdir] [-t T] [-dt H] [--manual] [--ascii|--utf8]\n",
 			       argv[0]);
 			return 0;
 		} else if (strlen(argv[i]) < 400) {
@@ -81,24 +84,32 @@ int main(int argc, char **argv)
 	}
 
 	if (!dir_is_writable(outdir)) {
-		printf("提示: 目录 \"%s\" 不存在或不可写，数据改写到当前目录\n", outdir);
+		printf("%s\n", T("提示: 目录不存在或不可写，数据改写到当前目录",
+		                 "note: output dir missing or unwritable, writing to cwd"));
 		strcpy(outdir, ".");
 	}
 	if (ctl.integrator == INTEGRATOR_MANUAL && ctl.dt > 0.02) {
-		printf("提示: 平均速度格式只有一阶精度，建议 --manual 配 -dt 0.02\n\n");
+		printf("%s\n\n", T("提示: 平均速度格式只有一阶精度，建议 --manual 配 -dt 0.02",
+		                   "note: the average-velocity scheme is first order; "
+		                   "pair --manual with -dt 0.02"));
 	}
 
 
-	printf("约化单位: 电荷 e / 质量 相对分子质量 / 长度 A / k = %g\n", K_COULOMB);
-	printf("核 %.0f e 固定于 (%g, %g)   a 粒子 %.0f e 质量 %.0f\n",
+	printf("%s\n", T("约化单位: 电荷 e / 质量 相对分子质量 / 长度 A / k = 1",
+	                "reduced units: charge e / relative molecular mass / angstrom / k = 1"));
+	printf(T("核 %.0f e 固定于 (%g, %g)   a 粒子 %.0f e 质量 %.0f\n",
+	         "nucleus %.0f e fixed at (%g, %g);  alpha %.0f e, mass %.0f\n"),
 	       Z_NUCLEUS, X_NUCLEUS, Y_NUCLEUS, Z_ALPHA, MASS_ALPHA);
-	printf("k q1 q2 = %g   加速度前系数 = %g\n", COUPLING, ACCEL_FACTOR);
-	printf("积分器 = %s   dt = %.6f   t_max = %.3f   停算框 = +-%.1f\n\n",
+	printf(T("k q1 q2 = %g   加速度前系数 k q1 q2 / m = %g\n",
+	         "k q1 q2 = %g   acceleration factor k q1 q2 / m = %g\n"),
+	       COUPLING, ACCEL_FACTOR);
+	printf(T("积分器 = %s   dt = %.6f   t_max = %.3f   停算框 = +-%.1f\n\n",
+	         "integrator = %s   dt = %.6f   t_max = %.3f   stop box = +-%.1f\n\n"),
 	       ctl.integrator == INTEGRATOR_RK4 ? "RK4" : "manual",
 	       ctl.dt, ctl.t_max, ctl.stop_box);
 
 	printf("%-4s %-18s %-6s %8s %12s %12s %11s %10s %8s\n",
-	       "id", "label", "点数", "t_end", "x_end", "y_end",
+	       "id", "label", "n_pts", "t_end", "x_end", "y_end",
 	       "max|dE|/E", "r_min", "theta");
 
 	for (i = 0; i < N_CASES; i++) {
@@ -150,7 +161,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "错误: 无法写出 %s\n", path);
 	}
 
-	printf("数据已写入 %s/ ：traj_1.dat ... traj_%d.dat, summary.md, summary.txt\n",
+	printf(T("数据已写入 %s/ ：traj_1.dat ... traj_%d.dat, summary.md, summary.txt\n",
+	         "wrote %s/ : traj_1.dat ... traj_%d.dat, summary.md, summary.txt\n"),
 	       outdir, N_CASES);
 	return 0;
 }

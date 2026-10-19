@@ -17,6 +17,18 @@
  * ------------------------------------------------------------------------- */
 
 /* 写一条轨迹；失败返回 -1，成功返回写入的数据行数 */
+/* ---------------------------------------------------------------------------
+ * 控制台文案的语言开关。
+ *
+ * 数据文件（.dat / summary.txt）一律是 ASCII，不受影响；这里只管终端打印。
+ * Windows 控制台默认代码页是 GBK，UTF-8 的中文字符串会显示成乱码，
+ * 所以在 _WIN32 下缺省走英文；也可以用 --utf8 强制打开中文
+ * （或者事先执行 chcp 65001 把代码页切成 UTF-8）。
+ * ------------------------------------------------------------------------- */
+
+void console_set_ascii(int use_ascii);            /* 非 0 = 用英文文案 */
+const char *T(const char *zh, const char *en);    /* 按设置二选一 */
+
 int traj_export(const Trajectory *traj, const Case *cs,
 		const TrajReport *rep, const RunControl *ctl,
 		const char *path);

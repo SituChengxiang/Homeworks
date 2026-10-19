@@ -238,7 +238,7 @@ def main(datadir="data", outname="trajectories"):
     dt_txt = f"dt = {float(m_dt.group(1)):g}" if m_dt else "dt = ?"
 
     note = ("约化单位：电荷 e、质量 相对分子质量、长度 \u00c5、库仑常数 k = 1   ·   "
-            f"{kind}，{dt_txt}，能量漂移 max|dE|/E \u2264 {de_max:.0e}")
+            f"{kind}，{dt_txt}，能量漂移 max|dE|/E \u2264 {de_max:.1e}")
     fig.text(0.5, 0.008, note, ha="center", fontsize=7.6, color="#5b6166")
 
     fig.subplots_adjust(left=0.082, right=0.988, top=0.955, bottom=0.085)

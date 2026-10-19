@@ -102,6 +102,28 @@ But the current compiler "GNU" does not support this, or CMake does not know the
 `-std=c89`（而非 `-std=gnu89`）同时保证了 `CMAKE_C_EXTENSIONS OFF` 的等价效果。
 `CMakeLists.txt` 里用 `check_c_compiler_flag` 做了一次探测，注释也写明了原因。
 
+### 单文件版（给不在 IDE 里建工程的人）
+
+正式交付是 `src/ + include/` 的分模块版本（题目要求分模块）。
+但要在 Dev-C++ 里一次加 9 个源文件对非开发环境不太友好，
+所以额外提供 `alpha_scattering_single.c` —— 一个文件、按 F11 就能跑：
+
+```bat
+gcc -std=c89 -pedantic-errors -Wall -Wextra -O2 alpha_scattering_single.c -o alpha.exe -lm
+```
+
+它由 `python3 make_single_source.py` 从模块化源码合并生成
+（按依赖顺序先放所有声明、再放各模块实现，剥掉 include guard，
+标准库头只留一份）。两份产物输出**逐字节相同**，比对方法：
+
+```sh
+./build/alpha_scattering /tmp/mod    --ascii
+./alpha_single           /tmp/single --ascii
+diff -r /tmp/mod /tmp/single          # 只有路径名一行不同
+```
+
+改了 `src/` 里任何代码之后，记得重跑一次 `make_single_source.py` 再打包。
+
 ### Dev-C++ / Windows MinGW
 
 代码是纯 ISO C89，只用标准库（`stdio.h stdlib.h string.h math.h`），
@@ -113,21 +135,28 @@ But the current compiler "GNU" does not support this, or CMake does not know the
    存到本目录，类型选 `C project`。
 2. 把 `src/` 下 9 个 `.c` 全部 `Add → Existing Source` 进工程
    （只加 `main.c` 会链接失败，其余模块都在别的 `.c` 里）。
-3. `Project Options → Parameters` 里：
+3. **控制台中文乱码？** Dev-C++ 的控制台默认是 GBK 代码页，UTF-8 中文会花屏。
+   程序在 `_WIN32` 下已自动切成英文文案，也可以手动控制：
+   `--ascii` 强制英文、`--utf8` 强制中文，或者事先 `chcp 65001` 换代码页。
+   数据文件与 `summary.*` 本来就是纯 ASCII，不受影响。
+4. `Project Options → Parameters` 里：
    - `C Compiler` 追加 `-std=c89 -pedantic-errors -Wall -Wextra`（想严格验证才加，
      不加也能编，代码本身就符合 C89）；
    - `Files` 里确认链接了 `libm`（MinGW 通常自动带上，若报 `undefined reference to sqrt`
      就在 `Linker` 里加 `-lm`）。
-4. `Project Options → Application → Working directory` 设为本目录，
+5. `Project Options → Application → Working directory` 设为本目录，
    或者干脆不管——工作目录不对时程序会自动把数据写到当前目录并打印提示。
-5. `Execute → Compile & Run`，控制台会打印两张表。
+6. `Execute → Compile & Run`，控制台会打印两张表。
 
 **B. 命令行一行搞定**
 
 ```bat
 gcc -std=c89 -pedantic-errors -Wall -Wextra -O2 -Iinclude src\*.c -o alpha.exe
 alpha.exe out
+alpha.exe out --ascii        :: 控制台用英文
 ```
+
+命令行参数一览：`[输出目录] [-t 时长] [-dt 步长] [--manual] [--ascii|--utf8]`。
 
 `plot.py` 只是出图用，老师那边不跑 Python 也没关系——
 `data/trajectories.png` 已经是成品图，`.dat` 里是原始数据。
@@ -163,8 +192,9 @@ python3 plot.py data                   # 作图
 
 ### 四重验证
 
-1. **能量与角动量守恒**：六条轨迹全程 `max|ΔE|/E ≤ 5.6e-15`、
-   `max|ΔL|/|L| ≤ 3.9e-15`，已经是双精度舍入水平，说明 dt = 0.005 足够。
+1. **能量与角动量守恒**：六条轨迹全程取最大偏差，`max|ΔE|/E = 5.6e-15`、
+   `max|ΔL|/|L| = 8.5e-15`（都出现在 v₀ = 3.0 那组），已经是双精度舍入水平，
+   说明 dt = 0.005 足够。逐条数值见各数据文件头部的 `# invariant` 行。
 2. **与解析解对照**：最近距离数值 vs 卢瑟福解析值吻合到 6 位以上
    （残差 6e-8 ~ 1.1e-6，来自采样点不正好落在精确拱点上，不是积分误差）。
 3. **步长减半收敛性**：`-dt` 依次取 h、h/2、h/4，比较同一时刻的轨道坐标，

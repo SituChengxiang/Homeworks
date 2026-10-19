@@ -401,3 +401,10 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 *.idea
+
+# Others
+*.zip
+*.png
+*.pdf
+*.mp4
+*.gif

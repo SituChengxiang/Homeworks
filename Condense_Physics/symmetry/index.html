@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>对称操作 · 反轴 n̄ 与正四面体的 24 个操作（Td = 4̄3m）</title>
+<style>
+  :root {
+    --bg: #070b16;
+    --panel: rgba(19, 26, 45, 0.92);
+    --panel-2: rgba(28, 37, 62, 0.9);
+    --line: rgba(120, 145, 200, 0.22);
+    --txt: #e8eefc;
+    --muted: #93a1c2;
+    --accent: #22d3ee;
+    --warn: #fb7185;
+    --good: #4ade80;
+    --x: #f87171;
+    --y: #4ade80;
+    --z: #60a5fa;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(1200px 800px at 70% -10%, #17233f 0%, var(--bg) 55%);
+    color: var(--txt);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow: hidden;
+  }
+  #app { display: grid; grid-template-columns: 330px 1fr 340px; height: 100vh; gap: 14px; padding: 14px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; backdrop-filter: blur(10px);
+  }
+  #side, #info { padding: 18px; display: flex; flex-direction: column; gap: 17px; overflow-y: auto; }
+  h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .3px; }
+  h2 { font-size: 14.5px; margin: 0; }
+  .sub { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .section-title {
+    font-size: 11.5px; color: var(--muted); letter-spacing: .12em;
+    text-transform: uppercase; margin-bottom: 9px;
+  }
+  /* 反轴、负指标的上横线：面板里用 CSS，画布贴图上用组合字符 */
+  .ov { text-decoration: overline; }
+
+  .seg { display: grid; gap: 7px; }
+  .seg.c2 { grid-template-columns: repeat(2, 1fr); }
+  .seg.c3 { grid-template-columns: repeat(3, 1fr); }
+  .seg button {
+    appearance: none; cursor: pointer;
+    padding: 11px 6px; border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--txt);
+    font-size: 13.5px; font-weight: 600; transition: .18s;
+  }
+  .seg button:hover { border-color: rgba(34, 211, 238, .6); }
+  .seg button.active {
+    background: linear-gradient(180deg, rgba(34, 211, 238, .28), rgba(34, 211, 238, .12));
+    border-color: var(--accent); color: #d8fbff;
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, .35), 0 6px 20px -8px rgba(34, 211, 238, .7);
+  }
+  .seg button small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 3px; }
+  .seg button.active small { color: #a8eef7; }
+
+  .toggles { display: flex; flex-direction: column; gap: 2px; }
+  .switch {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 4px; cursor: pointer; font-size: 13.2px; border-radius: 9px;
+  }
+  .switch:hover { background: rgba(255, 255, 255, .04); }
+  .switch input { display: none; }
+  .track {
+    width: 40px; height: 22px; border-radius: 999px;
+    background: rgba(255, 255, 255, .13); position: relative; transition: .18s; flex: 0 0 auto;
+  }
+  .track::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; transition: .18s;
+  }
+  .switch input:checked + .track { background: rgba(34, 211, 238, .55); }
+  .switch input:checked + .track::after { left: 21px; background: #eafeff; }
+
+  .slider-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; border-radius: 4px;
+    background: rgba(255, 255, 255, .16); outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid #062026;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    cursor: pointer; border: 2px solid #062026;
+  }
+  #kVal { width: 34px; text-align: right; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  .btn {
+    appearance: none; cursor: pointer; width: 100%;
+    padding: 10px; border-radius: 11px;
+    background: var(--panel-2); color: var(--txt);
+    border: 1px solid var(--line); font-size: 13px; font-weight: 600;
+  }
+  .btn:hover { border-color: rgba(34, 211, 238, .6); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn.on {
+    background: linear-gradient(180deg, rgba(34, 211, 238, .3), rgba(34, 211, 238, .12));
+    border-color: var(--accent); color: #d8fbff;
+  }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+  .manual-only.dimmed { opacity: .38; pointer-events: none; }
+  .step-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+  .step-ctrl .btn { padding: 9px 6px; font-size: 12.5px; }
+  .step-ctrl .btn.span { grid-column: span 2; }
+  .dots { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .dot-btn {
+    appearance: none; cursor: pointer; width: 25px; height: 25px; padding: 0;
+    border-radius: 8px; font-size: 11.5px; font-weight: 600;
+    background: var(--panel-2); color: var(--muted);
+    border: 1px solid var(--line); transition: .15s;
+  }
+  .dot-btn:hover { color: var(--txt); border-color: rgba(34, 211, 238, .5); }
+  .dot-btn.on {
+    background: var(--accent); color: #062026; border-color: var(--accent);
+    box-shadow: 0 4px 14px -4px rgba(34, 211, 238, .8);
+  }
+  .kbd-tip { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.6; }
+
+  /* 24 个操作的按钮：按共轭类分组 */
+  .cls-group { margin-bottom: 10px; }
+  .cls-head {
+    display: flex; justify-content: space-between; font-size: 11.5px;
+    color: var(--muted); margin-bottom: 5px;
+  }
+  .cls-head b { color: #cfe0ff; font-weight: 600; }
+  .ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .op-btn {
+    appearance: none; cursor: pointer; padding: 7px 2px; border-radius: 9px;
+    background: var(--panel-2); color: var(--txt);
+    border: 1px solid var(--line); font-size: 12px; font-weight: 600; transition: .15s;
+  }
+  .op-btn:hover { border-color: rgba(34, 211, 238, .55); }
+  .op-btn.active { background: rgba(34, 211, 238, .26); border-color: var(--accent); color: #d8fbff; }
+  .op-btn.imp { color: #ffd9c2; }
+  .op-btn.imp.active { background: rgba(251, 146, 60, .28); border-color: #fb923c; color: #ffe9d6; }
+  .op-btn i { font-style: normal; font-size: 10px; color: var(--muted); display: block; }
+
+  #equiv {
+    font-size: 12.8px; line-height: 1.65; color: #a8eef7;
+    background: rgba(34, 211, 238, .08); border-left: 3px solid var(--accent);
+    padding: 9px 11px; border-radius: 0 10px 10px 0;
+  }
+
+  /* ---------- 中间画布 ---------- */
+  #stage { position: relative; overflow: hidden; min-height: 0; }
+  #scene { display: block; width: 100%; height: 100%; }
+  .badge {
+    position: absolute; left: 14px; top: 14px; font-size: 12px; color: #cdeff7;
+    background: rgba(8, 12, 24, .6); border: 1px solid var(--line);
+    padding: 6px 11px; border-radius: 999px; pointer-events: none;
+  }
+  .hint {
+    position: absolute; left: 14px; bottom: 12px; font-size: 11.5px; color: rgba(200, 215, 245, .55);
+    background: rgba(8, 12, 24, .55); padding: 6px 10px; border-radius: 8px; pointer-events: none;
+  }
+  #stepPanel {
+    display: none; position: absolute; left: 16px; right: 16px; bottom: 16px;
+    background: rgba(9, 14, 28, .86); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 12px; padding: 12px 15px;
+    backdrop-filter: blur(6px); pointer-events: none; max-width: 640px;
+  }
+  #stepTitle { font-size: 14px; font-weight: 700; color: #d8fbff; margin-bottom: 5px; }
+  #stepText { font-size: 12.8px; line-height: 1.75; color: #b9c6e2; }
+
+  /* ---------- 右侧信息 ---------- */
+  #info { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px; }
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: flex; gap: 12px; justify-content: space-between; padding: 7px 0;
+    font-size: 12.8px; border-bottom: 1px dashed var(--line);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .k { color: var(--muted); flex: 0 0 auto; }
+  .row .val { text-align: right; line-height: 1.5; }
+  .row .val b { color: var(--accent); }
+  .yes { color: var(--good); } .no { color: var(--warn); }
+
+  .mx { border-collapse: collapse; margin: 4px auto 0; font-variant-numeric: tabular-nums; }
+  .mx td {
+    padding: 4px 9px; text-align: right; font-size: 12.4px; color: #dbeafe;
+    border-bottom: 1px solid rgba(120, 145, 200, .12);
+  }
+  .mx tr:last-child td { border-bottom: none; }
+
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 12.2px; }
+  table.tbl th {
+    text-align: left; color: var(--muted); font-weight: 500;
+    padding: 5px 6px; border-bottom: 1px solid var(--line); font-size: 11.5px;
+  }
+  table.tbl td { padding: 5px 6px; border-bottom: 1px dashed var(--line); line-height: 1.5; }
+  table.tbl tr:last-child td { border-bottom: none; }
+  table.tbl tr.hl td { background: rgba(34, 211, 238, .1); color: #d8fbff; }
+
+  .note {
+    font-size: 12.5px; line-height: 1.7; color: #b9c6e2;
+    background: rgba(34, 211, 238, .07); border-left: 3px solid var(--accent);
+    padding: 11px 13px; border-radius: 0 10px 10px 0;
+  }
+  .howto { font-size: 12.3px; color: var(--muted); line-height: 1.75; }
+  .howto b { color: #d8e3fb; }
+  .legend { display: flex; flex-direction: column; gap: 6px; font-size: 12.2px; color: var(--muted); }
+  .legend div { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto; }
+
+  @media (max-width: 1080px) {
+    body { overflow: auto; }
+    #app { grid-template-columns: 1fr; height: auto; }
+    #stage { height: 62vh; }
+    #side, #info { max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 左：控制 -->
+  <aside id="side" class="card">
+    <div>
+      <h1>对称操作</h1>
+      <p class="sub">反轴 <span class="ov">n</span>（旋转 + 反演）与正四面体的 24 个对称操作 · 黄昆《固体物理》晶体的对称性</p>
+    </div>
+
+    <div>
+      <div class="section-title">讲哪一段</div>
+      <div class="seg c2" id="modeSel">
+        <button data-mode="bar">反轴 <span class="ov">n</span><small>3̄ 4̄ 6̄ = ?</small></button>
+        <button data-mode="td">四面体 Td<small>24 个操作 = 4̄3m</small></button>
+      </div>
+      <div id="equiv" style="margin-top:10px"></div>
+    </div>
+
+    <div>
+      <div class="section-title">分步演示</div>
+      <label class="switch">分步讲解 <input type="checkbox" id="tDemo"><span class="track"></span></label>
+      <div class="dots" id="stepDots"></div>
+      <div class="step-ctrl">
+        <button class="btn" id="stepPrev">← 上一步</button>
+        <button class="btn" id="stepNext">下一步 →</button>
+        <button class="btn span" id="stepPlay">▶ 自动播放</button>
+      </div>
+      <p class="kbd-tip">演示时图层由步骤决定；<b>←/→</b> 换步骤，<b>空格</b> 播放/暂停。关掉开关回到自由查看。</p>
+    </div>
+
+    <!-- 反轴专属 -->
+    <div id="barCtl" class="manual-only">
+      <div class="section-title">选择反轴</div>
+      <div class="seg c3" id="nSel">
+        <button data-n="1"><span class="ov">1</span></button>
+        <button data-n="2"><span class="ov">2</span></button>
+        <button data-n="3"><span class="ov">3</span></button>
+        <button data-n="4"><span class="ov">4</span></button>
+        <button data-n="5"><span class="ov">5</span><small>非晶体学</small></button>
+        <button data-n="6"><span class="ov">6</span></button>
+      </div>
+      <div class="slider-row" id="kCtl" style="margin-top:12px">
+        <span class="sub">施加次数 k</span>
+        <input type="range" id="kSlider" min="0" max="6" step="1">
+        <span id="kVal"></span>
+      </div>
+      <div class="section-title" style="margin-top:14px">图层</div>
+      <div class="toggles">
+        <label class="switch">反轴与记号 <input type="checkbox" id="bAxis"><span class="track"></span></label>
+        <label class="switch">原始基元（右手系）<input type="checkbox" id="bMotif"><span class="track"></span></label>
+        <label class="switch">全部等效点 <input type="checkbox" id="bOrbit"><span class="track"></span></label>
+        <label class="switch">一步一步施加 <input type="checkbox" id="bCurrent"><span class="track"></span></label>
+        <label class="switch">已走过的虚影 <input type="checkbox" id="bGhost"><span class="track"></span></label>
+        <label class="switch">等效点配对关系 <input type="checkbox" id="bPairs"><span class="track"></span></label>
+        <label class="switch">水平镜面 m⊥<input type="checkbox" id="bMirror"><span class="track"></span></label>
+        <label class="switch">对称中心 i<input type="checkbox" id="bCenter"><span class="track"></span></label>
+        <label class="switch">编号<input type="checkbox" id="bNumbers"><span class="track"></span></label>
+      </div>
+    </div>
+
+    <!-- Td 专属 -->
+    <div id="tdCtl" class="manual-only">
+      <div class="section-title">24 个对称操作</div>
+      <div class="btn-row" style="margin-bottom:9px">
+        <button class="btn" id="opPrev">← 上一个</button>
+        <button class="btn" id="opNext">下一个 →</button>
+      </div>
+      <button class="btn" id="opPlay">▶ 依次播放 24 个</button>
+      <div id="opGrid" style="margin-top:11px"></div>
+      <div class="section-title" style="margin-top:14px">图层</div>
+      <div class="toggles">
+        <label class="switch">参考立方框 <input type="checkbox" id="hCube"><span class="track"></span></label>
+        <label class="switch">四个面着色 <input type="checkbox" id="hFaces"><span class="track"></span></label>
+        <label class="switch">六条棱 <input type="checkbox" id="hEdges"><span class="track"></span></label>
+        <label class="switch">顶点球 <input type="checkbox" id="hVerts"><span class="track"></span></label>
+        <label class="switch">顶点编号 <input type="checkbox" id="hLabels"><span class="track"></span></label>
+        <label class="switch">手性指示三面角 <input type="checkbox" id="hTriad"><span class="track"></span></label>
+        <label class="switch">变形前的原位置 <input type="checkbox" id="hGhost"><span class="track"></span></label>
+        <label class="switch">3 条 <span class="ov">4</span> 轴 ⟨100⟩<input type="checkbox" id="hAxis4"><span class="track"></span></label>
+        <label class="switch">4 条 3 次轴 ⟨111⟩<input type="checkbox" id="hAxis3"><span class="track"></span></label>
+        <label class="switch">6 个 σd 镜面<input type="checkbox" id="hMirrors"><span class="track"></span></label>
+      </div>
+      <button class="btn" id="poseReset" style="margin-top:11px">↺ 四面体复位</button>
+    </div>
+
+    <div class="btn-row manual-only">
+      <button class="btn" id="resetView">重置视角</button>
+      <button class="btn" id="alongView">沿轴俯视</button>
+    </div>
+    <label class="switch manual-only">自动旋转 <input type="checkbox" id="tRotate"><span class="track"></span></label>
+
+    <div class="legend">
+      <div><span class="dot" style="background:var(--accent)"></span>原始基元 / 当前操作后的位置</div>
+      <div><span class="dot" style="background:#c7d2fe;opacity:.5"></span>同一群作用出来的其余等效点</div>
+      <div><span class="dot" style="background:var(--warn)"></span>带反映、反演（det = −1）的操作</div>
+      <div><span class="dot" style="background:var(--x)"></span>三面角 x 　<span class="dot" style="background:var(--y)"></span>y 　<span class="dot" style="background:var(--z)"></span>z</div>
+    </div>
+  </aside>
+
+  <!-- 中：3D -->
+  <main id="stage" class="card">
+    <canvas id="scene"></canvas>
+    <div class="badge" id="stageBadge">拖拽旋转 · 滚轮缩放 · 右键平移</div>
+    <div class="hint" id="hint">等效点系与矩阵都是实时算出来的，不是手画的</div>
+    <div id="stepPanel">
+      <div id="stepTitle"></div>
+      <div id="stepText"></div>
+    </div>
+  </main>
+
+  <!-- 右：信息 -->
+  <aside id="info" class="card">
+    <h2 id="infoTitle">—</h2>
+    <div class="rows" id="infoRows"></div>
+    <div id="infoTable"></div>
+    <div class="note" id="infoNote"></div>
+    <div class="howto" id="howto"></div>
+  </aside>
+</div>
+
+<script src="./sym-app.js"></script>
+</body>
+</html>
