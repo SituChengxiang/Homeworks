@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>六方密堆积 HCP · 密置层堆叠与堆积率推导</title>
+<style>
+  :root {
+    --bg: #070b16;
+    --panel: rgba(19, 26, 45, 0.92);
+    --panel-2: rgba(28, 37, 62, 0.9);
+    --line: rgba(120, 145, 200, 0.22);
+    --txt: #e8eefc;
+    --muted: #93a1c2;
+    --accent: #22d3ee;
+    --layerA: #6ea8fe;
+    --layerB: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(1200px 800px at 70% -10%, #17233f 0%, var(--bg) 55%);
+    color: var(--txt);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow: hidden;
+  }
+  #app { display: grid; grid-template-columns: 330px 1fr 350px; height: 100vh; gap: 14px; padding: 14px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; backdrop-filter: blur(10px);
+  }
+  #side, #info { padding: 18px; display: flex; flex-direction: column; gap: 17px; overflow-y: auto; }
+  h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .3px; }
+  h2 { font-size: 15px; margin: 0; }
+  .sub { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .section-title {
+    font-size: 11.5px; color: var(--muted); letter-spacing: .12em;
+    text-transform: uppercase; margin-bottom: 9px;
+  }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .seg button {
+    appearance: none; cursor: pointer; padding: 9px 4px; border-radius: 11px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--txt);
+    font-size: 12.5px; font-weight: 600; transition: .18s;
+  }
+  .seg button:hover { border-color: rgba(34,211,238,.6); }
+  .seg button.active {
+    background: linear-gradient(180deg, rgba(34,211,238,.28), rgba(34,211,238,.12));
+    border-color: var(--accent); color: #d8fbff;
+    box-shadow: 0 0 0 1px rgba(34,211,238,.35), 0 6px 20px -8px rgba(34,211,238,.7);
+  }
+
+  .switch {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 4px; cursor: pointer; font-size: 13px; border-radius: 9px;
+  }
+  .switch:hover { background: rgba(255,255,255,.04); }
+  .switch input { display: none; }
+  .track {
+    width: 40px; height: 22px; border-radius: 999px; background: rgba(255,255,255,.13);
+    position: relative; transition: .18s; flex: 0 0 auto;
+  }
+  .track::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+    border-radius: 50%; background: #cbd5e1; transition: .18s;
+  }
+  .switch input:checked + .track { background: rgba(34,211,238,.55); }
+  .switch input:checked + .track::after { left: 21px; background: #eafeff; }
+  .toggles { display: flex; flex-direction: column; gap: 2px; }
+  .manual-only.dimmed { opacity: .38; pointer-events: none; }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 4px;
+    background: rgba(255,255,255,.16); outline: none; margin: 12px 0 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid #062026;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    cursor: pointer; border: 2px solid #062026;
+  }
+  .ca-read { font-size: 19px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .ticks { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); }
+  .ca-note { font-size: 11.8px; color: var(--muted); line-height: 1.6; margin-top: 5px; }
+
+  .btn {
+    appearance: none; cursor: pointer; width: 100%; padding: 10px 6px; border-radius: 11px;
+    background: var(--panel-2); color: var(--txt); border: 1px solid var(--line);
+    font-size: 12.5px; font-weight: 600;
+  }
+  .btn:hover { border-color: rgba(34,211,238,.6); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+  .btn-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .btn.span { grid-column: span 2; }
+  .btn.accent {
+    background: linear-gradient(180deg, rgba(34,211,238,.28), rgba(34,211,238,.1));
+    border-color: rgba(34,211,238,.7); color: #d8fbff;
+  }
+  .btn.on {
+    background: linear-gradient(180deg, rgba(34,211,238,.35), rgba(34,211,238,.14));
+    border-color: var(--accent); color: #d8fbff;
+  }
+  .dots { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .dot-btn {
+    appearance: none; cursor: pointer; width: 24px; height: 24px; padding: 0;
+    border-radius: 8px; font-size: 11.5px; font-weight: 600;
+    background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); transition: .15s;
+  }
+  .dot-btn:hover { color: var(--txt); border-color: rgba(34,211,238,.5); }
+  .dot-btn.on {
+    background: var(--accent); color: #062026; border-color: var(--accent);
+    box-shadow: 0 4px 14px -4px rgba(34,211,238,.8);
+  }
+  .kbd-tip { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.6; }
+
+  #stage { position: relative; overflow: hidden; min-height: 0; }
+  #scene { display: block; width: 100%; height: 100%; }
+  .badge {
+    position: absolute; left: 14px; top: 14px; font-size: 12px; color: #cdeff7;
+    background: rgba(8,12,24,.6); border: 1px solid var(--line);
+    padding: 6px 11px; border-radius: 999px; pointer-events: none;
+  }
+  .hint {
+    position: absolute; left: 14px; bottom: 12px; font-size: 11.5px;
+    color: rgba(200,215,245,.55); background: rgba(8,12,24,.55);
+    padding: 6px 10px; border-radius: 8px; pointer-events: none;
+  }
+  #stepPanel {
+    display: none; position: absolute; left: 16px; right: 16px; bottom: 16px;
+    background: rgba(9,14,28,.86); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 12px;
+    padding: 12px 15px; pointer-events: none; max-width: 640px;
+  }
+  #stepTitle { font-size: 14px; font-weight: 700; color: #d8fbff; margin-bottom: 5px; }
+  #stepText { font-size: 12.8px; line-height: 1.75; color: #b9c6e2; }
+
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: flex; gap: 12px; justify-content: space-between; padding: 7px 0;
+    font-size: 12.6px; border-bottom: 1px dashed var(--line);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .k { color: var(--muted); }
+  .row .val { text-align: right; line-height: 1.5; font-variant-numeric: tabular-nums; }
+  .row .val b { color: var(--accent); }
+  .note {
+    font-size: 12.4px; line-height: 1.7; color: #b9c6e2;
+    background: rgba(34,211,238,.07); border-left: 3px solid var(--accent);
+    padding: 11px 13px; border-radius: 0 10px 10px 0;
+  }
+  .legend-title { font-size: 11px; letter-spacing: .1em; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; }
+  .lg { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; font-size: 12px; color: var(--muted); }
+  .lg i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: 0 0 auto; }
+  #nnLegend { display: none; }
+  .formula {
+    font-size: 12.4px; line-height: 1.9; color: #c6d5f2;
+    background: rgba(255,255,255,.03); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px; font-variant-numeric: tabular-nums;
+  }
+  .formula b { color: var(--accent); }
+  @media (max-width: 1120px) {
+    body { overflow: auto; }
+    #app { grid-template-columns: 1fr; height: auto; }
+    #stage { height: 62vh; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 左：控制 -->
+  <aside id="side" class="card">
+    <div>
+      <h1>六方密堆积 HCP</h1>
+      <p class="sub">密置层 · ABAB 堆叠 · 六方晶胞 · 堆积率 74.05% 的来历</p>
+    </div>
+
+    <div>
+      <div class="section-title">分步演示</div>
+      <label class="switch">堆积过程（11 步）<input type="checkbox" id="tDemo"><span class="track"></span></label>
+      <div class="dots" id="stepDots"></div>
+      <div class="btn-row">
+        <button class="btn" id="stepPrev">← 上一步</button>
+        <button class="btn" id="stepNext">下一步 →</button>
+        <button class="btn span" id="stepPlay">▶ 自动播放</button>
+      </div>
+      <p class="kbd-tip">键盘 <b>←/→</b> 切步骤、<b>空格</b> 播放暂停。关掉开关回到自由查看。</p>
+    </div>
+
+    <div>
+      <div class="section-title">材料（真实轴比）</div>
+      <div class="seg" id="matSel">
+        <button data-m="ideal">理想</button>
+        <button data-m="Mg">Mg</button>
+        <button data-m="Zn">Zn</button>
+        <button data-m="Cd">Cd</button>
+        <button data-m="Ti">Ti</button>
+        <button data-m="Be">Be</button>
+      </div>
+      <p class="ca-note" id="materialNote"></p>
+
+      <div style="margin-top:14px">
+        <div class="ca-read" id="caReadout">c/a = 1.6330</div>
+        <input type="range" id="caSlider" min="1.45" max="1.95" step="0.005" />
+        <div class="ticks"><span>1.45 扁</span><span id="caSliderVal">1.633</span><span>1.95 长</span></div>
+        <p class="ca-note" id="caNote"></p>
+      </div>
+
+      <div class="btn-row three">
+        <button class="btn" id="idealBtn">回到理想</button>
+        <button class="btn" id="topView">沿 c 轴看</button>
+        <button class="btn" id="sideView">侧看堆叠</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">图层（自由查看）</div>
+      <div class="toggles manual-only">
+        <label class="switch">密置层 A（底面）<input type="checkbox" id="hA"><span class="track"></span></label>
+        <label class="switch">中间层 B（3 个）<input type="checkbox" id="hB"><span class="track"></span></label>
+        <label class="switch">顶层 A（与底面对齐）<input type="checkbox" id="hA2"><span class="track"></span></label>
+        <label class="switch">三角形空隙（两种）<input type="checkbox" id="hHollow"><span class="track"></span></label>
+        <label class="switch">六方棱柱棱框<input type="checkbox" id="hPrism"><span class="track"></span></label>
+        <label class="switch">份额裁剪 1/6 · 1/2 · 1<input type="checkbox" id="hShare"><span class="track"></span></label>
+        <label class="switch">最近邻键<input type="checkbox" id="hBonds"><span class="track"></span></label>
+        <label class="switch">配位数 12 高亮<input type="checkbox" id="hNN"><span class="track"></span></label>
+        <label class="switch">正四面体推 c/a<input type="checkbox" id="hTetra"><span class="track"></span></label>
+        <label class="switch">层名 / 份额标签<input type="checkbox" id="hLabels"><span class="track"></span></label>
+        <label class="switch">扩展点阵<input type="checkbox" id="hCloud"><span class="track"></span></label>
+        <label class="switch">自动旋转<input type="checkbox" id="hRotate"><span class="track"></span></label>
+      </div>
+    </div>
+
+    <button class="btn" id="resetView">重置视角</button>
+  </aside>
+
+  <!-- 中：3D -->
+  <main id="stage" class="card">
+    <canvas id="scene"></canvas>
+    <div class="badge" id="stageBadge">拖拽旋转 · 滚轮缩放 · 右键平移</div>
+    <div class="hint" id="hint">蓝 = A 层，绿 = B 层；A 层每个球正好贴 6 个</div>
+    <div id="stepPanel">
+      <div id="stepTitle"></div>
+      <div id="stepText"></div>
+    </div>
+  </main>
+
+  <!-- 右：推导 -->
+  <aside id="info" class="card">
+    <h2>堆积率 APF 逐行代入</h2>
+
+    <div class="formula">
+      APF = <b>n·(4/3)πR³</b> / <b>(3√3/2)·a²c</b><br>
+      n = 12×1/6 + 2×1/2 + 3 = <b>6</b><br>
+      a = 2R，c = √(8/3)·a　⟹　APF = <b>π/(3√2) = √2π/6 ≈ 74.05%</b>
+    </div>
+
+    <div>
+      <div class="section-title">当前结构的数字</div>
+      <div class="rows" id="rows"></div>
+    </div>
+
+    <div id="nnLegend"></div>
+
+    <div class="note" id="derivation">
+      c/a 不是量出来的，是<strong>正四面体</strong>推出来的：同层 3 个相切球的球心 + 层间那 1 个球心
+      构成棱长 a 的正四面体。底面三角形中心到顶点是 a/√3，四面体高就是层间距 √(2/3)·a；
+      一个完整周期里装着两层间距，所以 c = 2√(2/3)·a，c/a = √(8/3) ≈ 1.633。
+    </div>
+  </aside>
+</div>
+
+<script src="./hcp-app.js"></script>
+</body>
+</html>

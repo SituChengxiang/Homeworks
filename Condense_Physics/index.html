@@ -16,6 +16,7 @@
     --corner: #6ea8fe;
     --face: #ffb454;
     --body: #4ade80;
+    --share-ghost: #5b6b8c;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
@@ -120,6 +121,42 @@
     border: 1px solid var(--line); font-size: 13px; font-weight: 600;
   }
   .btn:hover { border-color: rgba(34,211,238,.6); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* ---------- 分步演示 ---------- */
+  .manual-only.dimmed { opacity: .38; pointer-events: none; }
+  .step-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+  .step-ctrl .btn { padding: 9px 6px; font-size: 12.5px; }
+  .step-ctrl .btn.span { grid-column: span 2; }
+  .step-ctrl .btn.on {
+    background: linear-gradient(180deg, rgba(34,211,238,.3), rgba(34,211,238,.12));
+    border-color: var(--accent); color: #d8fbff;
+  }
+  .dots { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .dot-btn {
+    appearance: none; cursor: pointer; width: 25px; height: 25px; padding: 0;
+    border-radius: 8px; font-size: 11.5px; font-weight: 600;
+    background: var(--panel-2); color: var(--muted);
+    border: 1px solid var(--line); transition: .15s;
+  }
+  .dot-btn:hover { color: var(--txt); border-color: rgba(34,211,238,.5); }
+  .dot-btn.on {
+    background: var(--accent); color: #062026; border-color: var(--accent);
+    box-shadow: 0 4px 14px -4px rgba(34,211,238,.8);
+  }
+  .kbd-tip { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.6; }
+
+  #stepPanel {
+    display: none;
+    position: absolute; left: 16px; right: 16px; bottom: 16px;
+    background: rgba(9,14,28,.86); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 12px; padding: 12px 15px;
+    backdrop-filter: blur(6px); pointer-events: none;
+    max-width: 620px;
+  }
+  #stepTitle { font-size: 14px; font-weight: 700; color: #d8fbff; margin-bottom: 5px; }
+  #stepText { font-size: 12.8px; line-height: 1.75; color: #b9c6e2; }
 
   .legend-atoms { display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; color: var(--muted); }
   .legend-atoms div { display: flex; align-items: center; gap: 8px; }
@@ -200,13 +237,26 @@
     </div>
 
     <div>
+      <div class="section-title">画晶胞的过程</div>
+      <label class="switch">分步演示 <input type="checkbox" id="tDemo"><span class="track"></span></label>
+      <div class="dots" id="stepDots"></div>
+      <div class="step-ctrl">
+        <button class="btn" id="stepPrev">← 上一步</button>
+        <button class="btn" id="stepNext">下一步 →</button>
+        <button class="btn span" id="stepPlay">▶ 自动播放</button>
+      </div>
+      <p class="kbd-tip">演示时图层由步骤决定；<b>←/→</b> 切换步骤，<b>空格</b> 播放/暂停。关掉开关回到自由查看。</p>
+    </div>
+
+    <div>
       <div class="section-title">显示选项</div>
-      <div class="toggles">
+      <div class="toggles manual-only">
         <label class="switch">原子 <input type="checkbox" id="tAtoms"><span class="track"></span></label>
         <label class="switch">晶胞棱框 <input type="checkbox" id="tCell"><span class="track"></span></label>
         <label class="switch">最近邻键 <input type="checkbox" id="tBonds"><span class="track"></span></label>
         <label class="switch">WS 原胞 <input type="checkbox" id="tWS"><span class="track"></span></label>
         <label class="switch">近邻方向（构造）<input type="checkbox" id="tNeighbors"><span class="track"></span></label>
+        <label class="switch">WS 中垂面<input type="checkbox" id="tPlanes"><span class="track"></span></label>
         <label class="switch">扩展晶格点云 <input type="checkbox" id="tExtended"><span class="track"></span></label>
         <label class="switch">WS 原胞平铺 <input type="checkbox" id="tTiling"><span class="track"></span></label>
         <label class="switch">坐标轴 a/b/c <input type="checkbox" id="tAxes"><span class="track"></span></label>
@@ -240,7 +290,9 @@
         <div><span class="dot" style="background:var(--corner)"></span>顶角原子（8 × 1/8）</div>
         <div><span class="dot" style="background:var(--body)"></span>体心原子（1）</div>
         <div><span class="dot" style="background:var(--face)"></span>面心原子（6 × 1/2）</div>
+        <div><span class="dot" style="background:#fff;box-shadow:0 0 6px rgba(255,255,255,.7)"></span>格点（抽象的几何点）</div>
         <div><span class="dot" style="background:var(--accent);opacity:.65"></span>WS 原胞</div>
+        <div><span class="dot" style="background:var(--share-ghost, #5b6b8c);opacity:.5"></span>虚影：分给邻胞的份额</div>
       </div>
     </div>
 
@@ -251,7 +303,11 @@
   <main id="stage" class="card">
     <canvas id="scene"></canvas>
     <div class="badge" id="stageBadge">拖拽旋转 · 滚轮缩放 · 右键平移</div>
-    <div class="hint">WS 原胞由“近邻中垂面”实时裁剪生成</div>
+    <div class="hint" id="hint">WS 原胞由“近邻中垂面”实时裁剪生成</div>
+    <div id="stepPanel">
+      <div id="stepTitle"></div>
+      <div id="stepText"></div>
+    </div>
   </main>
 
   <!-- 右：信息 -->
@@ -271,7 +327,7 @@
           <li>这些中垂面围成的最小多面体就是 WS 原胞。</li>
         </ol>
         它只含 <b>1 个格点</b>，体积等于 a³/n，而且能无缝填满整个空间。
-        打开左侧“近邻方向（构造）”即可看到这些连线。
+        打开左侧“近邻方向（构造）”即可看到这些连线；想看完整推导过程就打开<b>“分步演示”</b>。
       </div>
     </div>
   </aside>

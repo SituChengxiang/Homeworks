@@ -1,7 +1,7 @@
 function result = homework_1(x)
     % 使用泰勒展开计算 e^x
     % 精度要求: 与 MATLAB 内置 exp() 函数的差值小于 1e-6
-    % 302024343017 沈宽
+    % 302024343017 situChengxiang
 
     tolerance = 1e-6;  
     maxIter = 1000;   % 最大迭代次数，防止无限循环

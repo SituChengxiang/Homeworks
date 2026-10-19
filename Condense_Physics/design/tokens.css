@@ -1,0 +1,122 @@
+/* 设计系统 · token
+ * 只服务这两个新页（rotoinversion / tetrahedral-td），晶胞那三页不吃这一套。
+ * 两条硬规则：
+ *   1) 一切字号/线宽/半径都从 --u（舞台基准单位）推出来，不许写死像素 —— 投影时整幅画等比放大才读得清；
+ *   2) 颜色只有语义，没有装饰：一个强调色 + 一对「真/非真」对照色 + 三面角的红绿蓝。
+ */
+:root {
+  /* ---------- 基准单位：舞台短边的 1/100，由 JS 写回 ---------- */
+  --u: 9px;
+
+  /* ---------- 底色与面板 ---------- */
+  --c-bg: #060a14;
+  --c-stage: #0a1120;
+  --c-panel: rgba(17, 24, 41, 0.94);
+  --c-panel-2: rgba(28, 37, 62, 0.92);
+  --c-line: rgba(126, 150, 200, 0.24);
+  --c-txt: #eaf0fd;
+  --c-muted: #94a3c4;
+
+  /* ---------- 语义色 ---------- */
+  --c-accent: #22d3ee;          /* 当前 / 原始基元 */
+  --c-proper: #7dd3fc;          /* 真操作 det = +1 */
+  --c-improper: #fb7185;        /* 非真操作 det = −1（带反映、反演） */
+  --c-mirror: #4ade80;          /* 镜面 m */
+  --c-invert: #fb7185;          /* 对称中心 i */
+  --c-ghost: #64748b;           /* 虚影、上下文 */
+  --c-x: #f87171;               /* 三面角 x */
+  --c-y: #4ade80;               /* 三面角 y */
+  --c-z: #60a5fa;               /* 三面角 z */
+
+  /* ---------- 字号阶梯（1080p 投影反推：正文 ≥ 24px 等效） ---------- */
+  --fs-caption: calc(var(--u) * 3.4);   /* 底部字幕条 */
+  --fs-title: calc(var(--u) * 2.6);
+  --fs-body: calc(var(--u) * 2.0);
+  --fs-note: calc(var(--u) * 1.7);
+  --fs-symbol: calc(var(--u) * 1.6);    /* 2D 图上的编号、高度 */
+
+  /* ---------- 间距与形状 ---------- */
+  --sp-1: calc(var(--u) * 0.8);
+  --sp-2: calc(var(--u) * 1.6);
+  --sp-3: calc(var(--u) * 2.6);
+  --sp-4: calc(var(--u) * 4);
+  --r-1: calc(var(--u) * 0.9);
+  --r-2: calc(var(--u) * 1.6);
+  --r-3: calc(var(--u) * 2.4);
+
+  /* ---------- 2D 符号层尺寸（同样按 --u 推） ---------- */
+  --sym-dot: calc(var(--u) * 1.9);      /* 等效点半径 */
+  --sym-line: calc(var(--u) * 0.22);    /* 一般线宽 */
+  --sym-line-bold: calc(var(--u) * 0.42);
+  --sym-hit: calc(var(--u) * 3.2);      /* 点击命中半径，比画出来的大 */
+
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* 反轴、负指标的上横线：面板里走 CSS，画布上用组合字符 U+0304 */
+.ov { text-decoration: overline; }
+
+/* 焦点可见是投影场景的硬要求：老师用键盘，看不见焦点就没法讲 */
+:focus-visible {
+  outline: calc(var(--u) * 0.35) solid var(--c-accent);
+  outline-offset: calc(var(--u) * 0.4);
+}
+
+/* 舞台：16:9 锁定，窗口比例不对就留黑边，构图永远和设计时一致 */
+.stage-16x9 {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  margin: auto;
+  background: var(--c-stage);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.32fr 1fr;
+  grid-template-rows: 1fr auto;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+}
+.stage-16x9 > .view-3d { grid-column: 1; grid-row: 1; min-height: 0; }
+.stage-16x9 > .view-2d { grid-column: 2; grid-row: 1; min-height: 0; }
+.stage-16x9 > .caption { grid-column: 1 / -1; grid-row: 2; }
+
+canvas { display: block; width: 100%; height: 100%; }
+
+/* 底部字幕条：第 N/M · 标题 · 一句话结论 */
+.caption {
+  display: flex; align-items: baseline; gap: var(--sp-2);
+  background: var(--c-panel); border: 1px solid var(--line, var(--c-line));
+  border-left: calc(var(--u) * 0.45) solid var(--c-accent);
+  border-radius: var(--r-2); padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-caption); line-height: 1.35;
+}
+.caption .idx { color: var(--c-accent); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.caption .ttl { font-weight: 700; flex: 0 0 auto; }
+.caption .msg { color: #c3d0ea; font-size: var(--fs-body); }
+
+/* 抽屉：图层、数据表这些「讲到了再拉出来」的东西默认收起。
+   从左边滑出、盖在 3D 上 —— 数据讲的是右栏那张图上的点，压住 2D 就等于自断论证。 */
+.drawer {
+  position: absolute; top: var(--sp-2); left: var(--sp-2); bottom: var(--sp-2);
+  width: calc(var(--u) * 44); max-width: 52%;
+  background: var(--c-panel); border: 1px solid var(--c-line);
+  border-radius: var(--r-3); padding: var(--sp-3);
+  transform: translateX(calc(-100% - var(--sp-3))); transition: transform .22s ease;
+  overflow-y: auto; font-size: var(--fs-body); z-index: 3;
+}
+.drawer.open { transform: none; }
+.drawer h3 { font-size: var(--fs-note); color: var(--c-muted); letter-spacing: .12em; text-transform: uppercase; margin: 0 0 var(--sp-2); }
+
+/* 数据表 */
+table.data { width: 100%; border-collapse: collapse; font-size: var(--fs-note); font-variant-numeric: tabular-nums; }
+table.data th { text-align: left; color: var(--c-muted); font-weight: 500; padding: calc(var(--u) * .6) calc(var(--u) * .7); border-bottom: 1px solid var(--c-line); }
+table.data td { padding: calc(var(--u) * .6) calc(var(--u) * .7); border-bottom: 1px dashed var(--c-line); }
+table.data tr.sel td { background: rgba(34, 211, 238, .14); color: #d8fbff; font-weight: 700; }
+
+.hintkeys {
+  position: absolute; left: var(--sp-2); bottom: var(--sp-2);
+  font-size: var(--fs-note); color: rgba(200, 215, 245, .5);
+  background: rgba(8, 12, 24, .5); padding: calc(var(--u)*.6) calc(var(--u)*1.1);
+  border-radius: var(--r-1);
+}
+kbd { font: inherit; color: #cdeff7; }

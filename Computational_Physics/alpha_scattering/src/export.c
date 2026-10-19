@@ -5,6 +5,23 @@
 #include "units.h"
 #include "rutherford.h"
 
+static int g_ascii =
+#ifdef _WIN32
+    1;      /* Dev-C++ / MinGW 控制台默认 GBK，缺省先说英文 */
+#else
+    0;
+#endif
+
+void console_set_ascii(int use_ascii)
+{
+    g_ascii = use_ascii;
+}
+
+const char *T(const char *zh, const char *en)
+{
+    return g_ascii ? en : zh;
+}
+
 int traj_export(const Trajectory *traj, const Case *cs,
 		const TrajReport *rep, const RunControl *ctl,
 		const char *path)
@@ -86,7 +103,8 @@ void summary_print(const Case *cases, const TrajReport *reps,
 {
 	int i;
 
-	printf("\n数值解与卢瑟福解析解对照\n");
+	printf("\n%s\n", T("数值解与卢瑟福解析解对照",
+	                   "Numeric solution vs Rutherford analytic solution"));
 	printf("%-4s %-18s %-9s %-9s %-11s %-11s %-9s %-9s\n",
 	       "id", "label", "E", "|L|", "r_min数值", "r_min解析",
 	       "b渐近", "theta解析");
@@ -97,9 +115,12 @@ void summary_print(const Case *cases, const TrajReport *reps,
 		       reps[i].r_min, ref[i].r_min_exact,
 		       ref[i].b_asym, ref[i].theta_exact);
 	}
-	printf("\n框内偏转角 vs 渐近偏转角：前者是粒子在 +-22.5 画框内被截断时"
-	       "已经转过的角度，\n"
-	       "后者是 r -> 无穷 的卢瑟福值；粒子出射时仍在受力，所以框内值偏小。\n");
+	printf("\n%s\n", T(
+	   "框内偏转角 vs 渐近偏转角：前者是粒子在 +-22.5 画框内被截断时已经转过的角度，\n"
+	   "后者是 r -> 无穷 的卢瑟福值；粒子出射时仍在受力，所以框内值偏小。",
+	   "theta(in-frame): angle already turned when the track leaves the +-22.5 box.\n"
+	   "theta(asymptotic): Rutherford value at r -> infinity. The particle is still\n"
+	   "being repelled as it exits, hence the in-frame value is systematically smaller."));
 }
 
 int summary_export(const Case *cases, const TrajReport *reps,
@@ -109,6 +130,7 @@ int summary_export(const Case *cases, const TrajReport *reps,
 {
 	FILE *fp;
 	int   i;
+	double de_max, dl_max;
 
 	fp = fopen(path, "w");
 	if (fp == NULL) return -1;
@@ -132,8 +154,14 @@ int summary_export(const Case *cases, const TrajReport *reps,
 			        ref[i].b_asym, ref[i].ecc, reps[i].theta_deg,
 			        ref[i].theta_exact);
 		}
+		/* 取六条轨迹里的最大值：单条轨迹的漂移不能代表整体 */
+		de_max = dl_max = 0.0;
+		for (i = 0; i < n; i++) {
+			if (reps[i].de_max > de_max) de_max = reps[i].de_max;
+			if (reps[i].dl_max > dl_max) dl_max = reps[i].dl_max;
+		}
 		fprintf(fp, "\n守恒量：六条轨迹全程 max|dE|/E = %.1e，max|dL|/|L| = %.1e。\n",
-		        reps[0].de_max, reps[0].dl_max);
+		        de_max, dl_max);
 	} else {
 		fprintf(fp, "alpha scattering: numeric vs Rutherford analytic "
 		            "(reduced units)\n\n");

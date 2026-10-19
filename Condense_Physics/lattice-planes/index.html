@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>晶面族 {110} · 12 个面：六组平行对 + 合成菱形十二面体</title>
+<style>
+  :root {
+    --bg: #070b16;
+    --panel: rgba(19, 26, 45, 0.92);
+    --panel-2: rgba(28, 37, 62, 0.9);
+    --line: rgba(120, 145, 200, 0.22);
+    --txt: #e8eefc;
+    --muted: #93a1c2;
+    --accent: #22d3ee;
+    --warn: #fb7185;
+    --good: #4ade80;
+    --g1: #22d3ee; --g2: #fbbf24; --g3: #a78bfa;
+    --g4: #4ade80; --g5: #f472b6; --g6: #60a5fa;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(1200px 800px at 70% -10%, #17233f 0%, var(--bg) 55%);
+    color: var(--txt);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow: hidden;
+  }
+  #app { display: grid; grid-template-columns: 320px 1fr 350px; height: 100vh; gap: 14px; padding: 14px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; backdrop-filter: blur(10px);
+  }
+  #side, #info { padding: 18px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+  h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .3px; }
+  h2 { font-size: 14.5px; margin: 0; }
+  .sub { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .section-title {
+    font-size: 11.5px; color: var(--muted); letter-spacing: .12em;
+    text-transform: uppercase; margin-bottom: 9px;
+  }
+  .ov { text-decoration: overline; }
+
+  .seg { display: grid; gap: 7px; }
+  .seg.c2 { grid-template-columns: repeat(2, 1fr); }
+  .seg.c3 { grid-template-columns: repeat(3, 1fr); }
+  .seg.c4 { grid-template-columns: repeat(4, 1fr); }
+  .seg button {
+    appearance: none; cursor: pointer;
+    padding: 10px 6px; border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--panel-2); color: var(--txt);
+    font-size: 13px; font-weight: 600; transition: .18s;
+  }
+  .seg button:hover { border-color: rgba(34, 211, 238, .6); }
+  .seg button.active {
+    background: linear-gradient(180deg, rgba(34, 211, 238, .28), rgba(34, 211, 238, .12));
+    border-color: var(--accent); color: #d8fbff;
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, .35), 0 6px 20px -8px rgba(34, 211, 238, .7);
+  }
+  .seg button small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 3px; }
+  .seg button.active small { color: #a8eef7; }
+
+  .toggles { display: flex; flex-direction: column; gap: 2px; }
+  .switch {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 4px; cursor: pointer; font-size: 13px; border-radius: 9px;
+  }
+  .switch:hover { background: rgba(255, 255, 255, .04); }
+  .switch input { display: none; }
+  .track {
+    width: 40px; height: 22px; border-radius: 999px;
+    background: rgba(255, 255, 255, .13); position: relative; transition: .18s; flex: 0 0 auto;
+  }
+  .track::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%; background: #cbd5e1; transition: .18s;
+  }
+  .switch input:checked + .track { background: rgba(34, 211, 238, .55); }
+  .switch input:checked + .track::after { left: 21px; background: #eafeff; }
+
+  .btn {
+    appearance: none; cursor: pointer; width: 100%;
+    padding: 10px; border-radius: 11px;
+    background: var(--panel-2); color: var(--txt);
+    border: 1px solid var(--line); font-size: 13px; font-weight: 600;
+  }
+  .btn:hover { border-color: rgba(34, 211, 238, .6); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn.on {
+    background: linear-gradient(180deg, rgba(34, 211, 238, .3), rgba(34, 211, 238, .12));
+    border-color: var(--accent); color: #d8fbff;
+  }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+  .manual-only.dimmed { opacity: .38; pointer-events: none; }
+  .step-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+  .step-ctrl .btn { padding: 9px 6px; font-size: 12.5px; }
+  .step-ctrl .btn.span { grid-column: span 2; }
+  .dots { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .dot-btn {
+    appearance: none; cursor: pointer; width: 25px; height: 25px; padding: 0;
+    border-radius: 8px; font-size: 11.5px; font-weight: 600;
+    background: var(--panel-2); color: var(--muted);
+    border: 1px solid var(--line); transition: .15s;
+  }
+  .dot-btn:hover { color: var(--txt); border-color: rgba(34, 211, 238, .5); }
+  .dot-btn.on {
+    background: var(--accent); color: #062026; border-color: var(--accent);
+    box-shadow: 0 4px 14px -4px rgba(34, 211, 238, .8);
+  }
+  .kbd-tip { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.6; }
+
+  #equiv {
+    font-size: 12.6px; line-height: 1.65; color: #a8eef7;
+    background: rgba(34, 211, 238, .08); border-left: 3px solid var(--accent);
+    padding: 9px 11px; border-radius: 0 10px 10px 0;
+  }
+
+  #stage { position: relative; overflow: hidden; min-height: 0; }
+  #scene { display: block; width: 100%; height: 100%; }
+  .badge {
+    position: absolute; left: 14px; top: 14px; font-size: 12px; color: #cdeff7;
+    background: rgba(8, 12, 24, .6); border: 1px solid var(--line);
+    padding: 6px 11px; border-radius: 999px; pointer-events: none;
+  }
+  .hint {
+    position: absolute; left: 14px; bottom: 12px; font-size: 11.5px; color: rgba(200, 215, 245, .55);
+    background: rgba(8, 12, 24, .55); padding: 6px 10px; border-radius: 8px; pointer-events: none;
+  }
+  #stepPanel {
+    display: none; position: absolute; left: 16px; right: 16px; bottom: 16px;
+    background: rgba(9, 14, 28, .86); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 12px; padding: 12px 15px;
+    backdrop-filter: blur(6px); pointer-events: none; max-width: 720px;
+  }
+  #stepTitle { font-size: 14px; font-weight: 700; color: #d8fbff; margin-bottom: 5px; }
+  #stepText { font-size: 12.6px; line-height: 1.8; color: #b9c6e2; }
+
+  #info { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px; }
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: flex; gap: 12px; justify-content: space-between; padding: 7px 0;
+    font-size: 12.6px; border-bottom: 1px dashed var(--line);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .k { color: var(--muted); flex: 0 0 auto; }
+  .row .val { text-align: right; line-height: 1.5; }
+  .row .val b { color: var(--accent); }
+
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 11.9px; }
+  table.tbl th {
+    text-align: left; color: var(--muted); font-weight: 500;
+    padding: 5px 5px; border-bottom: 1px solid var(--line); font-size: 11.2px;
+  }
+  table.tbl td { padding: 4px 5px; border-bottom: 1px dashed var(--line); line-height: 1.5; }
+  table.tbl tr:last-child td { border-bottom: none; }
+  table.tbl tr.hl td { background: rgba(34, 211, 238, .1); color: #d8fbff; }
+
+  .note {
+    font-size: 12.4px; line-height: 1.7; color: #b9c6e2;
+    background: rgba(34, 211, 238, .07); border-left: 3px solid var(--accent);
+    padding: 11px 13px; border-radius: 0 10px 10px 0;
+  }
+  .howto { font-size: 12.2px; color: var(--muted); line-height: 1.75; }
+  .howto b { color: #d8e3fb; }
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 10px; font-size: 11.8px; color: var(--muted); }
+  .legend div { display: flex; align-items: center; gap: 7px; }
+  .dot { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
+
+  @media (max-width: 1080px) {
+    body { overflow: auto; }
+    #app { grid-template-columns: 1fr; height: auto; }
+    #stage { height: 62vh; }
+    #side, #info { max-height: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 左：控制 -->
+  <aside id="side" class="card">
+    <div>
+      <h1>晶面族 {110}</h1>
+      <p class="sub">12 个晶面 · 2 个一组开六组 · 再合成一个晶形 · 黄昆《固体物理》晶体的结构与结合</p>
+    </div>
+
+    <div id="equiv"></div>
+
+    <div>
+      <div class="section-title">分组（六组平行对 + 组合）</div>
+      <div class="seg c2" id="grpSel"></div>
+    </div>
+
+    <div>
+      <div class="section-title">分步演示</div>
+      <label class="switch">分步讲解 <input type="checkbox" id="tDemo"><span class="track"></span></label>
+      <div class="dots" id="stepDots"></div>
+      <div class="step-ctrl">
+        <button class="btn" id="stepPrev">← 上一组</button>
+        <button class="btn" id="stepNext">下一组 →</button>
+        <button class="btn span" id="stepPlay">▶ 自动播放</button>
+      </div>
+      <p class="kbd-tip">演示时图层由这一组决定；<b>←/→</b> 换组，<b>1…7</b> 直接跳，<b>空格</b> 播放/暂停，<b>[ / ]</b> 换晶面族。</p>
+    </div>
+
+    <div class="manual-only">
+      <div class="section-title">晶面族</div>
+      <div class="seg c4" id="famSel"></div>
+      <div class="section-title" style="margin-top:14px">晶体结构（格点与面密度）</div>
+      <div class="seg c3" id="stSel"></div>
+    </div>
+
+    <div class="manual-only">
+      <div class="section-title">图层</div>
+      <div class="toggles" id="layBox"></div>
+    </div>
+
+    <div class="manual-only" id="zoneCtl">
+      <div class="section-title">晶带轴（点亮同一带里的面）</div>
+      <div class="seg c4" id="zoneSel"></div>
+    </div>
+
+    <div class="btn-row manual-only">
+      <button class="btn" id="resetView">重置视角</button>
+      <button class="btn" id="alongView">沿法线俯视</button>
+    </div>
+    <label class="switch manual-only">自动旋转 <input type="checkbox" id="tRotate"><span class="track"></span></label>
+
+    <div class="legend" id="legend"></div>
+  </aside>
+
+  <!-- 中：3D -->
+  <main id="stage" class="card">
+    <canvas id="scene"></canvas>
+    <div class="badge" id="stageBadge">拖拽旋转 · 滚轮缩放 · 右键平移</div>
+    <div class="hint" id="hint"></div>
+    <div id="stepPanel">
+      <div id="stepTitle"></div>
+      <div id="stepText"></div>
+    </div>
+  </main>
+
+  <!-- 右：算出来的数据 -->
+  <aside id="info" class="card">
+    <h2 id="infoTitle">—</h2>
+    <div class="rows" id="infoRows"></div>
+    <div id="infoTable"></div>
+    <div class="note" id="infoNote"></div>
+    <div class="howto" id="howto"></div>
+  </aside>
+</div>
+
+<script src="./plane-app.js"></script>
+</body>
+</html>

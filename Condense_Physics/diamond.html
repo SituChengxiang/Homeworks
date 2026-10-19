@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>金刚石与闪锌矿 ZnS · 沿体对角线平移 ¼</title>
+<style>
+  :root {
+    --bg: #070b16;
+    --panel: rgba(19, 26, 45, 0.92);
+    --panel-2: rgba(28, 37, 62, 0.9);
+    --line: rgba(120, 145, 200, 0.22);
+    --txt: #e8eefc;
+    --muted: #93a1c2;
+    --accent: #22d3ee;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(1200px 800px at 70% -10%, #17233f 0%, var(--bg) 55%);
+    color: var(--txt);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow: hidden;
+  }
+  #app { display: grid; grid-template-columns: 340px 1fr 330px; height: 100vh; gap: 14px; padding: 14px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; backdrop-filter: blur(10px);
+  }
+  #side { padding: 18px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; }
+  h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .3px; }
+  .sub { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.5; }
+  .section-title {
+    font-size: 12px; color: var(--muted); letter-spacing: .12em;
+    text-transform: uppercase; margin-bottom: 9px;
+  }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .seg button {
+    appearance: none; cursor: pointer; padding: 11px 6px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--txt);
+    font-size: 13px; font-weight: 600; transition: .18s;
+  }
+  .seg button:hover { border-color: rgba(34,211,238,.6); }
+  .seg button.active {
+    background: linear-gradient(180deg, rgba(34,211,238,.28), rgba(34,211,238,.12));
+    border-color: var(--accent); color: #d8fbff;
+    box-shadow: 0 0 0 1px rgba(34,211,238,.35), 0 6px 20px -8px rgba(34,211,238,.7);
+  }
+  .seg button small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+  .seg button.active small { color: #a8eef7; }
+
+  .t-read { font-size: 21px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .t-note { font-size: 11.8px; color: var(--muted); line-height: 1.6; margin-top: 4px; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 4px;
+    background: rgba(255,255,255,.16); outline: none; margin: 12px 0 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid #062026;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    cursor: pointer; border: 2px solid #062026;
+  }
+  .scale-ticks { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-top: 11px; }
+  .btn {
+    appearance: none; cursor: pointer; width: 100%; padding: 10px 6px; border-radius: 11px;
+    background: var(--panel-2); color: var(--txt); border: 1px solid var(--line);
+    font-size: 12.5px; font-weight: 600;
+  }
+  .btn:hover { border-color: rgba(34,211,238,.6); }
+  .btn.primary {
+    grid-column: span 3; padding: 12px;
+    background: linear-gradient(180deg, rgba(34,211,238,.3), rgba(34,211,238,.12));
+    border-color: var(--accent); color: #d8fbff;
+  }
+  .switch {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 4px; cursor: pointer; font-size: 13.2px; border-radius: 9px;
+  }
+  .switch:hover { background: rgba(255,255,255,.04); }
+  .switch input { display: none; }
+  .track {
+    width: 40px; height: 22px; border-radius: 999px; background: rgba(255,255,255,.13);
+    position: relative; transition: .18s; flex: 0 0 auto;
+  }
+  .track::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+    border-radius: 50%; background: #cbd5e1; transition: .18s;
+  }
+  .switch input:checked + .track { background: rgba(34,211,238,.55); }
+  .switch input:checked + .track::after { left: 21px; background: #eafeff; }
+  .toggles { display: flex; flex-direction: column; gap: 2px; }
+  .legend-atoms { display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; color: var(--muted); }
+  .legend-atoms div { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto; }
+  .kbd-tip { font-size: 11.5px; color: var(--muted); margin-top: 9px; line-height: 1.6; }
+
+  #stage { position: relative; overflow: hidden; min-height: 0; }
+  #scene { display: block; width: 100%; height: 100%; }
+  .badge {
+    position: absolute; left: 14px; top: 14px; font-size: 12px; color: #cdeff7;
+    background: rgba(8,12,24,.6); border: 1px solid var(--line);
+    padding: 6px 11px; border-radius: 999px; pointer-events: none;
+  }
+  .hint {
+    position: absolute; left: 14px; bottom: 12px; font-size: 11.5px;
+    color: rgba(200,215,245,.55); background: rgba(8,12,24,.55);
+    padding: 6px 10px; border-radius: 8px; pointer-events: none;
+  }
+  #caption {
+    position: absolute; right: 16px; bottom: 16px; max-width: 400px;
+    background: rgba(9,14,28,.86); border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); border-radius: 12px;
+    padding: 11px 14px; pointer-events: none;
+  }
+  #capTitle { font-size: 13.5px; font-weight: 700; color: #d8fbff; margin-bottom: 4px; }
+  #capText { font-size: 12.3px; line-height: 1.7; color: #b9c6e2; }
+
+  #info { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px; }
+  #matName { font-size: 15.5px; margin: 0; }
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    display: flex; gap: 12px; justify-content: space-between; padding: 7px 0;
+    font-size: 12.6px; border-bottom: 1px dashed var(--line);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .k { color: var(--muted); flex: 0 0 auto; }
+  .row .val { text-align: right; line-height: 1.5; }
+  .pos {
+    font-size: 12.2px; color: #b9c6e2; background: rgba(255,255,255,.04);
+    border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; line-height: 1.9;
+    font-variant-numeric: tabular-nums;
+  }
+  .pos b { color: #d8e3fb; font-weight: 600; }
+  .note {
+    font-size: 12.4px; line-height: 1.7; color: #b9c6e2;
+    background: rgba(34,211,238,.07); border-left: 3px solid var(--accent);
+    padding: 11px 13px; border-radius: 0 10px 10px 0;
+  }
+  @media (max-width: 1080px) {
+    body { overflow: auto; }
+    #app { grid-template-columns: 1fr; height: auto; }
+    #stage { height: 62vh; }
+    #side, #info { max-height: none; }
+    #caption { position: static; max-width: none; margin: 10px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- 左：控制 -->
+  <aside id="side" class="card">
+    <div>
+      <h1>金刚石型结构</h1>
+      <p class="sub">两套面心立方沿体对角线 [111] 错开 ¼ · 固体物理</p>
+    </div>
+
+    <div>
+      <div class="section-title">选择材料</div>
+      <div class="seg" id="matSel">
+        <button data-m="C">C<small>金刚石</small></button>
+        <button data-m="Si">Si<small>晶体硅</small></button>
+        <button data-m="Zn">ZnS<small>闪锌矿</small></button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">第二套 FCC 的平移量</div>
+      <div class="t-read" id="tBig">t = 0.250 a</div>
+      <input type="range" id="tSlider" min="0" max="0.5" step="0.001" />
+      <div class="scale-ticks"><span>0 重合</span><span>¼ 到位</span><span>½ 简立方</span></div>
+      <div class="t-note">当前数值 <span id="tSliderVal"></span> a　·　<span id="tSub"></span></div>
+      <div class="btn-row">
+        <button class="btn primary" id="slideBtn">▶ 体对角线平移动画</button>
+        <button class="btn" id="zeroBtn">归零</button>
+        <button class="btn" id="quarterBtn">跳到 ¼</button>
+        <button class="btn" id="view111">沿 [111] 看</button>
+      </div>
+      <p class="kbd-tip"><b>←/→</b> 微调平移量，<b>↑/↓</b> 动画推到 ¼ / 退回 0。</p>
+    </div>
+
+    <div>
+      <div class="section-title">显示</div>
+      <div class="toggles">
+        <label class="switch">亚点阵 A（顶点 + 面心）<input type="checkbox" id="sA"><span class="track"></span></label>
+        <label class="switch">亚点阵 B（体内）<input type="checkbox" id="sB"><span class="track"></span></label>
+        <label class="switch">晶胞棱框<input type="checkbox" id="sCell"><span class="track"></span></label>
+        <label class="switch">最近邻键（四面体）<input type="checkbox" id="sBonds"><span class="track"></span></label>
+        <label class="switch">体对角线参考 / 平移矢量<input type="checkbox" id="sDiag"><span class="track"></span></label>
+        <label class="switch">扩展晶格点云<input type="checkbox" id="sCloud"><span class="track"></span></label>
+        <label class="switch">份额视图（1/8 · 1/2 · 1）<input type="checkbox" id="sShare"><span class="track"></span></label>
+        <label class="switch">自动旋转<input type="checkbox" id="sRotate"><span class="track"></span></label>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">点云范围</div>
+      <input type="range" id="range" min="1" max="3" step="0.5" />
+      <div class="scale-ticks"><span>1a</span><span id="rangeVal"></span></div>
+    </div>
+
+    <button class="btn" id="resetView">重置视角</button>
+
+    <div>
+      <div class="section-title">两套亚点阵</div>
+      <div class="legend-atoms">
+        <div id="legendA"></div>
+        <div id="legendB"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 中：3D -->
+  <main id="stage" class="card">
+    <canvas id="scene"></canvas>
+    <div class="badge" id="badge">拖拽旋转 · 滚轮缩放 · 右键平移</div>
+    <div class="hint">拖动滑杆，看第二套 FCC 沿 &lt;111&gt; 滑到 ¼ 处</div>
+    <div id="caption">
+      <div id="capTitle">构造要点</div>
+      <div id="capText">金刚石 = 面心立方 + 面心立方，后一套沿体对角线 &lt;111&gt; 平移 <b>¼</b> 个对角线长（即 (a/4, a/4, a/4)）。位移长度 √3a/4 正好等于键长，于是每个原子都有 4 个近邻、成正四面体。</div>
+    </div>
+  </main>
+
+  <!-- 右：信息 -->
+  <aside id="info" class="card">
+    <h2 id="matName">—</h2>
+    <div class="rows" id="infoRows"></div>
+
+    <div>
+      <div class="section-title">原子位置（分数坐标）</div>
+      <div class="pos">A：<b id="posA">—</b></div>
+      <div class="pos" style="margin-top:7px">B：<b id="posB">—</b></div>
+    </div>
+
+    <div class="note" id="infoNote"></div>
+
+    <div>
+      <div class="section-title">为什么偏偏是 ¼？</div>
+      <div class="pos" style="line-height:1.85">
+        沿 [111] 平移 t 后，A–B 最短距离是 √3·t·a。<br>
+        · t = 0：两套 FCC 重合，原子叠在一起。<br>
+        · t = ¼：距离 = √3a/4，每个原子恰好 4 个异种近邻，键角 109.47°，正四面体成立 → 金刚石 / 闪锌矿。<br>
+        · t = ½：两套 FCC 合并成一个简单立方（间距 a/2），每个原子变成 6 个八面体近邻，四面体配位消失。<br>
+        t = ¼ 与 t = ¾ 只差一个反演，给出同一个结构。
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script src="./diamond-app.js"></script>
+</body>
+</html>

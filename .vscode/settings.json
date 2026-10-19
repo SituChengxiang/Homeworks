@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "/home/kuan/Git/Homeworks/Computational_Physics/alpha_scattering"
+    "cmake.sourceDirectory": "/home/kuan/Git/Homeworks/Computational_Physics/alpha_scattering",
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }

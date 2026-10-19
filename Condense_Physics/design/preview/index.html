@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>设计系统 · 沿轴投影的两种画法对照（1̄ 2̄ 3̄ 4̄ 6̄）</title>
+<style>
+  body { margin: 0; background: var(--c-bg); color: var(--c-txt); overflow: hidden; }
+  #wrap { width: 100vw; height: 100vh; display: grid; grid-template-rows: auto 0.85fr 1fr auto; gap: var(--sp-2); padding: var(--sp-2); }
+  header h1 { margin: 0; font-size: var(--fs-title); }
+  header p { margin: 4px 0 0; font-size: var(--fs-note); color: var(--c-muted); }
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-2); min-height: 0; align-items: center; }
+  /* 面板锁 4:5 的竖版比例：符号层是「一张图纸」，被窗口拉成任意形状都会难看 */
+  .cell {
+    background: var(--c-stage); border: 1px solid var(--c-line); border-radius: var(--r-2);
+    overflow: hidden; aspect-ratio: 4 / 5; height: min(100%, 78vh); width: auto; max-width: 100%;
+    margin: 0 auto;
+  }
+  #verdict { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-2); }
+  #verdict div {
+    background: var(--c-panel); border: 1px solid var(--c-line); border-radius: var(--r-2);
+    padding: var(--sp-1) var(--sp-2); font-size: var(--fs-note); line-height: 1.5; text-align: center;
+  }
+  #verdict b { color: var(--c-accent); font-size: var(--fs-body); }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <h1>沿轴投影的符号层：反轴 1̄ 2̄ 3̄ 4̄ 6̄ 的等效点系</h1>
+    <p>上排＝教材俯视图（半填圆点表 z 的正负，上下成对的两点会重合）；下排＝上下圈展开图（高度换成半径，6 个点就是 6 个点）。点任意一个等效点可高亮它自己与它的配对点。</p>
+  </header>
+  <div class="row" id="row-top"></div>
+  <div class="row" id="row-fan"></div>
+  <div id="verdict"></div>
+</div>
+<script type="module" src="./src/preview.js"></script>
+</body>
+</html>
