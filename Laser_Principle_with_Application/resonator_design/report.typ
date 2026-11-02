@@ -1,3 +1,9 @@
+// 注意（改动前先读）：cavity.py 的 DESIGN 已经换成对称近共焦 R1=R2=600 mm、L=550 mm，
+// summary.typ / results.json / figures/ 都是新设计的数；而下面的正文仍是旧设计
+// R1=800 / R2=1200 的文字（"为什么选 800/1200"、"近共焦是反例"、"拉到 860 mm 失稳"、
+// "稳定区间 L<800"、"矢高 28 μm"等）。现在直接重编译会图文矛盾——
+// 要用长版就先按 report_simple.typ 的写法同步正文（两类腔长裕度见 summary.typ 的
+// margin_L / margin_crit）。日常交的是 report_simple.typ。
 #import "@local/simple-zjut-report:0.1.1": experiment-report
 #import "summary.typ": R, COMPARISON
 
