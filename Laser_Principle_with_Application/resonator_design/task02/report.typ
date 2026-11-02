@@ -1,7 +1,7 @@
 #import "@local/simple-zjut-report:0.1.1": experiment-report, three-line-table
-#import "summary_task2.typ": Q, SWEEP
+#import "numbers.typ": Q, SWEEP
 
-// 全部数字来自 task2_foxli.py 生成的 summary_task2.typ，不手抄。
+// 全部数字来自 task2_foxli.py 生成的 numbers.typ（本目录），不手抄。
 #show figure.where(kind: image): set figure(supplement: [图])
 #show figure.where(kind: table): set figure(supplement: [表])
 #set math.equation(numbering: "(1)")
@@ -123,17 +123,17 @@ $ d_n = norm(u_(n+1) - u_n) / norm(u_n) , quad "收敛判据" d_n < 10^(-9) . $ 
 == 结果一：自再现模
 
 #figure(
-  image("figures_task2/iteration.png", width: 100%),
+  image("figures/iteration.png", width: 100%),
   caption: [图1：Fox-Li 迭代过程（$D$ = #Q.D mm）。初值是一个宽度只有口径 45% 的高斯，前几次往返里光束迅速展宽并出现衍射环，30 次以后环基本消失，200 次时已经稳定。每帧按自身峰值归一，便于看形状。],
 ) <fig:iter>
 
 #figure(
-  image("figures_task2/mode.png", width: 100%),
+  image("figures/mode.png", width: 100%),
   caption: [图2：最终自再现模。左：镜面处归一化强度 $I(x,y)$；右：中心截面的对数强度与高斯拟合。中心部分与高斯吻合到 $10^(-4)$ 以下，边缘在 $r = a$ 处被口径截断。],
 ) <fig:mode>
 
 #figure(
-  image("figures_task2/convergence.png", width: 92%),
+  image("figures/convergence.png", width: 92%),
   caption: [图3：迭代收敛曲线（去全局相位后的场变化）。四条曲线对应四个有效口径；圆点标出各自降到 $10^(-6)$ 所需的往返次数。],
 ) <fig:conv>
 
@@ -163,7 +163,7 @@ $d_n$ 在双对数坐标下是直线，说明误差按固定比例衰减，也�
 == 结果二：口径对光场与损耗的影响
 
 #figure(
-  image("figures_task2/aperture.png", width: 100%),
+  image("figures/aperture.png", width: 100%),
   caption: [图4：左：基模往返损耗随有效口径的变化，与高斯截断估计对比；红点为 1% 指标，虚竖线是最小口径。右：基模与次低阶模的损耗，口径越小两者差距越大。],
 ) <fig:aper>
 
@@ -239,22 +239,22 @@ cd resonator_design
 uv run task2_foxli.py                       # 默认 V1 腔型 + D=1.6 mm，含二维校验
 uv run task2_foxli.py --R1 600 --R2 600 --L 550 --lam 1064 --D 1.6
 uv run task2_foxli.py --sweep 1.2,1.4,1.6,2.0   # 只改口径扫描列表
-typst compile --root . report_task2.typ      # 排版本报告
+typst compile --root . task02/report.typ     # 排版本报告
 ```
 
-$R_1$、$R_2$、$L$、$lambda$、$D$ 任一改变，图、`summary_task2.typ`、`results_task2.json`
-全部重算；报告里的数字都引自 `summary_task2.typ`，所以重跑后报告会自动同步。（若改成非稳腔，$g_1 g_2$ 不在 $(0,1)$ 内，脚本会直接报错退出——非稳腔没有收敛封闭模。）
+$R_1$、$R_2$、$L$、$lambda$、$D$ 任一改变，图、`task02/numbers.typ`、`task02/results.json`
+全部重算；报告里的数字都引自 `task02/numbers.typ`，所以重跑后报告会自动同步。（若改成非稳腔，$g_1 g_2$ 不在 $(0,1)$ 内，脚本会直接报错退出——非稳腔没有收敛封闭模。）
 
 #figure(
   three-line-table(
     columns: (auto, 1fr),
     head: ([*文件*], [*作用*]),
     [task2_foxli.py], [全部计算：柱对称 Fox-Li、二维校验、口径扫描、最小口径插值],
-    [summary_task2.typ], [结果字典，本报告的数字来源],
-    [results_task2.json], [同一批结果的机器可读版本（含扫描表与收敛次数）],
-    [figures_task2/], [四张图（@fig:iter–@fig:aper）],
+    [task02/numbers.typ], [结果字典，本报告的数字来源],
+    [task02/results.json], [同一批结果的机器可读版本（含扫描表与收敛次数）],
+    [task02/figures/], [四张图（@fig:iter–@fig:aper）],
   ),
   caption: [文件清单],
 )
 
-关键数值一览（与 `results_task2.json` 一致）：$w_0$ = #Q.w0 μm，$w_1$ = #Q.w1 μm，$z_R$ = #Q.zR mm，$D_"min"$ = #Q.dmin mm，$D$ = #Q.D mm 时往返损耗 #Q.loss、模斑 #Q.wmode μm，迭代 #Q.iters 次收敛到 $10^(-9)$。
+关键数值一览（与 `task02/results.json` 一致）：$w_0$ = #Q.w0 μm，$w_1$ = #Q.w1 μm，$z_R$ = #Q.zR mm，$D_"min"$ = #Q.dmin mm，$D$ = #Q.D mm 时往返损耗 #Q.loss、模斑 #Q.wmode μm，迭代 #Q.iters 次收敛到 $10^(-9)$。

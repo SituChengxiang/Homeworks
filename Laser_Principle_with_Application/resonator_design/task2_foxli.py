@@ -26,7 +26,7 @@ Task 02：两镜稳定腔的自再现模与衍射损耗（Fox-Li 迭代）
     uv run task2_foxli.py                        # 默认 V1 腔型 + 设计口径
     uv run task2_foxli.py --R1 600 --R2 600 --L 550 --lam 1064 --D 1.6
     uv run task2_foxli.py --quick                 # 跳过二维校验，只跑柱对称部分
-参数一改，图、summary_task2.typ、results_task2.json 全部重算。
+参数一改，图、task02/numbers.typ、task02/results.json 全部重算。
 
 数值细节
     * 传播算子用 Nyström 离散（J0 核），网格 dr 取到 ~1.5 µm，损耗本底约 4e-5；
@@ -45,6 +45,8 @@ import time
 import numpy as np
 from scipy.special import j0
 
+from cavity_core import eigen_q, rt_matrix   # 复用同目录的共享计算核心（Task 01）
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -55,7 +57,7 @@ plt.rcParams["axes.unicode_minus"] = False
 
 C0 = 299_792_458.0
 HERE = os.path.dirname(os.path.abspath(__file__))
-FIGDIR = os.path.join(HERE, "figures_task2")
+FIGDIR = os.path.join(HERE, "task02", "figures")
 os.makedirs(FIGDIR, exist_ok=True)
 
 # ------------------------------------------------------------------ 默认参数（V1 腔型）
@@ -78,23 +80,6 @@ def cavity(R1, R2, L, lam):
     if not 0.0 < prod < 1.0:
         raise SystemExit(f"该腔非稳定（g1*g2={prod:.4f}），无法求自再现模")
     return dict(g1=g1, g2=g2, prod=prod)
-
-
-def rt_matrix(L, R1, R2):
-    P = np.array([[1.0, L], [0.0, 1.0]])
-    M1 = np.array([[1.0, 0.0], [-2.0 / R1, 1.0]])
-    M2 = np.array([[1.0, 0.0], [-2.0 / R2, 1.0]])
-    return M1 @ P @ M2 @ P
-
-
-def eigen_q(M, lam):
-    A, B, C, D = M[0, 0], M[0, 1], M[1, 0], M[1, 1]
-    disc = (D - A) ** 2 + 4 * B * C
-    if disc >= 0:
-        return None
-    sq = math.sqrt(-disc)
-    return next(q for q in (((A - D) + 1j * sq) / (2 * C), ((A - D) - 1j * sq) / (2 * C))
-                if q.imag > 0)
 
 
 def mode_params(R1, R2, L, lam):
@@ -480,10 +465,10 @@ def main():
         foxli2d=(None if res2d is None else
                  dict(loss=res2d["loss"], w_um=res2d["w"] * 1e6, iters=res2d["iters"])),
     )
-    with open(os.path.join(HERE, "results_task2.json"), "w", encoding="utf-8") as fp:
+    with open(os.path.join(HERE, "task02", "results.json"), "w", encoding="utf-8") as fp:
         json.dump(summary, fp, indent=2, ensure_ascii=False)
     write_summary_typst(summary)
-    print("summary_task2.typ / results_task2.json 已更新")
+    print("task02/numbers.typ / task02/results.json 已更新")
 
 
 def write_summary_typst(s):
@@ -512,7 +497,7 @@ def write_summary_typst(s):
         for r in s["sweep"])
     lines.append(")")
     lines.append(f"#let SWEEP = ({rows})")
-    with open(os.path.join(HERE, "summary_task2.typ"), "w", encoding="utf-8") as fp:
+    with open(os.path.join(HERE, "task02", "numbers.typ"), "w", encoding="utf-8") as fp:
         fp.write("\n".join(lines) + "\n")
 
 

@@ -2,7 +2,7 @@
 """
 report_figs.py —— 谐振腔设计的全部出图（由 cavity.py 调用，不单独运行）。
 
-    fig_cavity            新手版腔结构示意：腔长/曲率/焦点（report_simple.typ 用）
+    fig_cavity            新手版腔结构示意：腔长/曲率/焦点（task01/report.typ 用）
     fig_envelope          腔结构 + 基模光束包络（report.typ 用）
     fig_gdiagram          g-g 稳定图：等比例坐标 + 原点放大 inset
     fig_length_tolerance  稳定性与光斑随腔长的变化
@@ -39,7 +39,7 @@ from cavity_core import (
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FIGDIR = os.path.join(HERE, "figures")
+FIGDIR = os.path.join(HERE, "task01", "figures")
 os.makedirs(FIGDIR, exist_ok=True)
 
 
@@ -93,7 +93,7 @@ def fig_cavity(des):
     """
     新手版腔结构示意图：只画几何光学的三件事——腔长、曲率、焦点（不画光束、
     孔径、图例、图内标题，图注交给 Typst）。figsize 宽 5.3 in 对应
-    report_simple.typ 里 92% 版心宽度，1:1 出图，字号 9 pt 打印就是 9 pt。
+    task01/report.typ 里 92% 版心宽度，1:1 出图，字号 9 pt 打印就是 9 pt。
     镜面曲率是放大画的（真实矢高只有几十 μm），由图注说明。
     """
     L = des["L"] * 1e3

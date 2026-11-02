@@ -1,11 +1,11 @@
 // 注意（改动前先读）：cavity.py 的 DESIGN 已经换成对称近共焦 R1=R2=600 mm、L=550 mm，
-// summary.typ / results.json / figures/ 都是新设计的数；而下面的正文仍是旧设计
+// ../task01/numbers.typ、results.json、figures/ 都是新设计的数；而下面的正文仍是旧设计
 // R1=800 / R2=1200 的文字（"为什么选 800/1200"、"近共焦是反例"、"拉到 860 mm 失稳"、
 // "稳定区间 L<800"、"矢高 28 μm"等）。现在直接重编译会图文矛盾——
-// 要用长版就先按 report_simple.typ 的写法同步正文（两类腔长裕度见 summary.typ 的
-// margin_L / margin_crit）。日常交的是 report_simple.typ。
+// 要用长版就先按 task01/report.typ 的写法同步正文（两类腔长裕度见 numbers.typ 的
+// margin_L / margin_crit）。日常交的是 task01/report.typ。
 #import "@local/simple-zjut-report:0.1.1": experiment-report
-#import "summary.typ": R, COMPARISON
+#import "../task01/numbers.typ": R, COMPARISON
 
 // 报告里的每一个数字都取自 summary.typ —— 它由 cavity.py 每次运行时重新生成，
 // 手改无效。这样"报告说的"和"脚本算的"不可能对不上。
@@ -61,7 +61,7 @@
 本设计的稳定性判据与介质无关。
 
 #figure(
-  image("figures/envelope.png", width: 100%),
+  image("../task01/figures/envelope.png", width: 100%),
   caption: [腔结构与基模高斯光束包络。镜面在图上画成竖线：$R = 800$ mm 的球面在
     通光半径 6.35 mm 内的矢高只有 28 μm，按 mm 尺度画是看不出的。],
 ) <fig:envelope>
@@ -151,7 +151,7 @@ $ C q^2 + (D - A) q - B = 0 , $
 === 迭代证据：稳定与失稳的实际差别
 
 #figure(
-  image("figures/stability_demo.png", width: 84%),
+  image("../task01/figures/stability_demo.png", width: 84%),
   caption: [把 $q$ 映射 $q -> (A q + B) / (C q + D)$ 迭代 40 次。稳定腔里模斑半径在
     #R.qmap_w_lo_um–#R.qmap_w_hi_um μm 之间有界振荡（保形旋转，既不收缩也不发散）；
     同一副镜把腔长拉到 860 mm 使 $g_1 g_2 < 0$ 后，模斑在第 40 次已达
@@ -159,7 +159,7 @@ $ C q^2 + (D - A) q - B = 0 , $
 ) <fig:stabilitydemo>
 
 #figure(
-  image("figures/g_diagram.png", width: 78%),
+  image("../task01/figures/g_diagram.png", width: 78%),
   caption: [$g$-$g$ 稳定图（浅色为稳定区 $0 < g_1 g_2 < 1$）。本设计点在稳定区内部，
     离两条边界都远；对照设计分别贴着共焦边（$g_1 g_2 approx 0$）、平行平面角
     （$g_1 g_2 -> 1$）和同心边（$g_1 g_2 -> 1$，$g < 0$ 分支）。],
@@ -222,7 +222,7 @@ $J_0$ 解析掉方位角积分）传播到 M2，再按"反射即横向相位共�
 === 腔长公差
 
 #figure(
-  image("figures/length_tolerance.png", width: 100%),
+  image("../task01/figures/length_tolerance.png", width: 100%),
   caption: [左：$g_1 g_2$ 随腔长的变化，浅色为稳定区，本设计点在 $L$ = #R.L_mm mm，
     到共焦边界 $L = R_1$ = #R.L_stable_hi_mm mm 还有一大段距离。右：基模束腰与两镜
     光斑随腔长的变化，靠近边界时光斑急剧变大。],
@@ -257,7 +257,7 @@ M2 面偏移 #R.mis100u_offset_M2_um μm；按"偏移不超过较小光斑 1/4"�
 单格就是几 μrad，因此这个容差是可以稳定复现的。
 
 #figure(
-  image("figures/misalignment.png", width: 88%),
+  image("../task01/figures/misalignment.png", width: 88%),
   caption: [失调灵敏度对比：同样引起 1/4 光斑的轴偏移，本设计需要
     #R.mis_tolerance_urad μrad，近平面腔只需 26.8 μrad，近同心腔只需 7.0 μrad。
     工作点越靠近 $g$-$g$ 图边界，曲线越靠左下，即越"怕碰"。],
@@ -305,7 +305,7 @@ $ delta_"clip" = "exp"(-2 a^2 / w^2) , $
   $a / w$ = 2.83，往返经过两次，合计 #R.loss_total_rt（约 0.00002%）。
 
 #figure(
-  image("figures/aperture_loss.png", width: 88%),
+  image("../task01/figures/aperture_loss.png", width: 88%),
   caption: [往返截断损耗随光阑半径的变化。设计工作点（两镜 6.35 mm、毛细 1.0 mm）
     都在曲线左端的可忽略区；若误用 Ø1 mm 的管，损耗立刻升到 1% 量级。],
 ) <fig:aper>

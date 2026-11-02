@@ -15,10 +15,10 @@
 三块文件，各管一段（拆开是为了后面继续加功能时不动彼此）：
     cavity_core.py   纯计算：稳定性判据、模式参数、公差/失调/孔径核算
                      （以及 DESIGN / COMPARATORS 定义，改设计只动这里）
-    report_figs.py   全部出图 -> figures/
-    cavity.py        本文件：算一遍 -> results.json + summary.typ -> 调出图
+    report_figs.py   全部出图 -> task01/figures/
+    cavity.py        本文件：算一遍 -> task01/results.json + task01/numbers.typ -> 调出图
 
-报告（report.typ / report_simple.typ）只引用 summary.typ 里的数字，不手抄。
+报告（task01/report.typ，长版在 archive/report_long.typ）只引用 task01/numbers.typ 里的数字，不手抄。
 
 运行
     uv run cavity.py            # 需要 uv（自动装 numpy/matplotlib/scipy）
@@ -135,12 +135,12 @@ def main():
     fig_aperture(des)
     print("\n图已写入", FIGDIR)
 
-    with open(os.path.join(HERE, "results.json"), "w", encoding="utf-8") as fp:
+    with open(os.path.join(HERE, "task01", "results.json"), "w", encoding="utf-8") as fp:
         json.dump({"design": des, "comparators": others}, fp, indent=2, ensure_ascii=False,
                   default=lambda o: None if (isinstance(o, float) and not math.isfinite(o)) else o)
 
     write_summary_typst(des, others)
-    print("summary.typ 已更新")
+    print("task01/numbers.typ 已更新")
 
 
 def tex_sci(v):
@@ -277,7 +277,7 @@ def write_summary_typst(des, others):
             )
         )
     lines.append("#let COMPARISON = (" + ", ".join(rows) + ")")
-    with open(os.path.join(HERE, "summary.typ"), "w", encoding="utf-8") as fp:
+    with open(os.path.join(HERE, "task01", "numbers.typ"), "w", encoding="utf-8") as fp:
         fp.write("\n".join(lines) + "\n")
 
 

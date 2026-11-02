@@ -1,7 +1,7 @@
 #import "@local/simple-zjut-report:0.1.1": experiment-report
-#import "summary.typ": R, COMPARISON
+#import "numbers.typ": R, COMPARISON
 
-// 数字全部来自 cavity.py 生成的 summary.typ，不手抄。
+// 数字全部来自 cavity.py 生成的 numbers.typ（本目录），不手抄。
 #show figure.where(kind: image): set figure(supplement: [图])
 #show figure.where(kind: table): set figure(supplement: [表])
 

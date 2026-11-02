@@ -23,7 +23,7 @@ Task 03：腔内基模的高斯光束描述、增益晶体位置与泵浦光斑�
   6 泵浦匹配：泵浦束腰半径与位置，重叠因子
     xi = 4 wp^2 wl^2 / (wp^2 + wl^2)^2（含泵浦吸收加权平均）与聚焦光组。
 
-结果写 results_task3.json / summary_task3.typ，图写 figures_task3/。
+结果写 task03/results.json / task03/numbers.typ，图写 task03/figures/。
 
 可复算
     uv run task3_gauss.py
@@ -52,11 +52,12 @@ import matplotlib.pyplot as plt
 plt.rcParams["font.family"] = ["LXGW WenKai", "DejaVu Sans", "sans-serif"]
 plt.rcParams["axes.unicode_minus"] = False
 
+from cavity_core import eigen_q, w_from_q as w_of_q   # 复用同目录的共享计算核心（Task 01）
 import task2_foxli  # 复用 Task 02 的柱对称 Fresnel 传播算子（同目录）
 
 C0 = 299_792_458.0
 HERE = os.path.dirname(os.path.abspath(__file__))
-FIGDIR = os.path.join(HERE, "figures_task3")
+FIGDIR = os.path.join(HERE, "task03", "figures")
 os.makedirs(FIGDIR, exist_ok=True)
 
 # ------------------------------------------------------------------ Nd:YAG 物性
@@ -113,22 +114,6 @@ def round_trip(segments, R1, R2):
     for m in reversed(fwd):
         B = m @ B
     return mirror(R1) @ B @ mirror(R2) @ F
-
-
-def eigen_q(M, lam):
-    """解 C q^2 + (D-A) q - B = 0，取 Im(q) > 0 的根；非稳腔返回 None。"""
-    A, B = M[0, 0], M[0, 1]
-    C, D = M[1, 0], M[1, 1]
-    disc = (D - A) ** 2 + 4.0 * B * C
-    if disc >= 0.0:
-        return None
-    sq = math.sqrt(-disc)
-    return next(q for q in (((A - D) + 1j * sq) / (2 * C), ((A - D) - 1j * sq) / (2 * C))
-                if q.imag > 0)
-
-
-def w_of_q(q, lam):
-    return math.sqrt(-lam / (math.pi * (1.0 / q).imag))
 
 
 def forward_matrix(segments):
@@ -887,7 +872,7 @@ def main():
         ap_dev = float(np.max(np.abs(lg[m_ap])))
         core_dev_r = float(res["r"][m_core][int(np.argmax(np.abs(lg[m_core])))])
         core_sign = float(np.mean(lg[m_core]))
-        p2 = os.path.join(HERE, "results_task2.json")
+        p2 = os.path.join(HERE, "task02", "results.json")
         t2 = json.load(open(p2, encoding="utf-8")) if os.path.exists(p2) else None
         cmp2 = dict(iters=res["iters"], loss_fox=res["loss"], w_fox=res["w"],
                     w_edge=edge_w(res["u"], res["r"]), w_fit=w_fit, resid=resid,
@@ -974,7 +959,7 @@ def main():
     print("\n图已写入", FIGDIR)
 
     Q, tables = build_Q(args, ec, cry, pmp, cmp2)
-    write_typ(os.path.join(HERE, "summary_task3.typ"), Q, tables)
+    write_typ(os.path.join(HERE, "task03", "numbers.typ"), Q, tables)
     raw = dict(
         inputs=dict(args.__dict__),
         equiv={k: (v if not isinstance(v, dict) else "…") for k, v in ec.items()
@@ -987,9 +972,9 @@ def main():
         verify=(None if not cmp2 else {k: v for k, v in cmp2.items() if k != "t2"}),
         task2_source=None if not cmp2 or not cmp2["t2"] else cmp2["t2"],
     )
-    with open(os.path.join(HERE, "results_task3.json"), "w", encoding="utf-8") as fp:
+    with open(os.path.join(HERE, "task03", "results.json"), "w", encoding="utf-8") as fp:
         json.dump(raw, fp, indent=2, ensure_ascii=False, default=str)
-    print("summary_task3.typ / results_task3.json 已更新")
+    print("task03/numbers.typ / task03/results.json 已更新")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 #import "@local/simple-zjut-report:0.1.1": experiment-report, three-line-table
-#import "summary_task3.typ": Q, FLAT, POS, THERM, PUMP
+#import "numbers.typ": Q, FLAT, POS, THERM, PUMP
 
-// 全部数字来自 task3_gauss.py 生成的 summary_task3.typ，不手抄。
+// 全部数字来自 task3_gauss.py 生成的 numbers.typ（本目录），不手抄。
 #show figure.where(kind: image): set figure(supplement: [图])
 #show figure.where(kind: table): set figure(supplement: [表])
 #set math.equation(numbering: "(1)")
@@ -127,12 +127,12 @@ $ w(z) = w_0 sqrt(1 + ((z - z_"w") / z_R)^2) , quad
 @fig:env 左图是整段腔的光束包络：按 @eq:envelope 画出 ±$w(z)$，标出束腰（红虚线）、两镜光斑、瑞利面（点线，也就是等价共焦腔镜面位置）与晶体所占区间；右图把"实际腔 / 等价共焦腔"两套坐标并排画出来。@fig:wf 左图给出 $R(z)$：它在两镜处正好等于镜曲率半径 #Q.R1 mm（@eq:selfrepro 的自再现条件——Task 01 里用几何焦距 $R/2$ 说的那件事，在这里换成等相位面语言），在束腰处发散为无穷（平面波前）；右图把区间向腔外延拓，标出瑞利面处 $w = sqrt(2) w_0$ = #Q.wR μm 与最小波前曲率 $2 f$ = #Q.Rmin mm。
 
 #figure(
-  image("figures_task3/envelope.png", width: 100%),
+  image("figures/envelope.png", width: 100%),
   caption: [图1：左——腔内基模高斯包络，束腰（距 M1 #Q.d1 mm 的腔心）、两镜光斑与增益晶体位置；右——等价共焦腔坐标系，实际两镜（$z$ = #Q.z1 / + #Q.d2 mm）坐在等价腔镜（$z = ± f$ = ±#Q.fnum mm）以内。镜形挠度按示意放大。],
 ) <fig:env>
 
 #figure(
-  image("figures_task3/wavefront.png", width: 96%),
+  image("figures/wavefront.png", width: 96%),
   caption: [图2：左——等相位面曲率半径 $R(z)$ 在两镜处与镜曲率重合；右——腔外延拓，瑞利面 $z = ± f$ 处 $w = sqrt(2) w_0$、波前曲率取极小 $2 f$ = #Q.Rmin mm。],
 ) <fig:wf>
 
@@ -156,11 +156,11 @@ Task 02 用柱对称 Fox-Li 迭代求自再现模，本任务用高斯模型描�
     [往返衍射损耗], [#Q.lossfox], [#Q.lossgauss（高斯截断式估计）], [高斯估计高 #Q.losscmp\%],
     [次低阶模往返损耗], [#Q.lossmode], [—（基模模型不含高阶模）], [—],
   ),
-  caption: [表4：Task 02 的波动光学结果与 Task 03 高斯模型在同一截面上的对照（$D$ = #Q.D mm；Task 02 一列直接引自其生成物 `results_task2.json`）],
+  caption: [表4：Task 02 的波动光学结果与 Task 03 高斯模型在同一截面上的对照（$D$ = #Q.D mm；Task 02 一列直接引自其生成物 `task02/results.json`）],
 ) <tab:cross>
 
 #figure(
-  image("figures_task3/verify_task2.png", width: 100%),
+  image("figures/verify_task2.png", width: 100%),
   caption: [图3：左——沿腔光斑尺寸，高斯模型与 Fox-Li 自再现模的二阶矩 / $1/e^2$ 半径 / 核心拟合值；中——二阶矩相对偏差沿腔的变化；右——镜面处横向强度分布与解析高斯的对比（对数纵轴）。],
 ) <fig:verify>
 
@@ -210,7 +210,7 @@ Task 02 用柱对称 Fox-Li 迭代求自再现模，本任务用高斯模型描�
   靠近镜面时（@tab:pos 末行）中心光斑涨到 #Q.posfarw μm（比束腰处大 #Q.posfarinc\%），晶体内部的光斑漂移升到 #Q.posfardw 个百分点，同时 $a/w$ 降到 #Q.posfarmar（比束腰处小 #Q.posnarmar 倍）、截断损耗升到 #Q.posfarloss——阈值、模式匹配、衍射损耗三项同时变差。此外*对称放置*保住了 Task 01/02 的失调容差：载入元件后两镜光斑仍然相等（@tab:therm 每行 $w_1 = w_2$），镜面处波前仍与镜面对合到 #Q.rmatch 的相对精度。
 
 #figure(
-  image("figures_task3/crystal.png", width: 100%),
+  image("figures/crystal.png", width: 100%),
   caption: [图4：左——离开束腰的光斑相对变化（$10^(-2)\%$ 量级，极为平坦）；右——同长晶体放在束腰处与近镜处，晶体内光斑由"常数"变成"明显倾斜"。],
 ) <fig:crys>
 
@@ -269,7 +269,7 @@ $ #Q.b95lo <= w_p / w_0 <= 1.0 . $
 === 设计点：泵浦束腰尺寸与位置
 
 #figure(
-  image("figures_task3/pump.png", width: 100%),
+  image("figures/pump.png", width: 100%),
   caption: [图5：左——重叠因子随 $w_p / w_0$ 的变化，标出 $xi$ = 0.90/0.95/0.98 允许带与课件判据 $w_p <= w_0$；右——晶体内泵浦与腔模光斑（两者都近似常数，阴影为间隙），虚线为剩余泵浦比例（#Q.abst\% 被吸收）。],
 ) <fig:pump>
 
@@ -300,7 +300,7 @@ cd resonator_design
 uv run task3_gauss.py                       # 默认沿用 Task 02 腔型 + Nd:YAG 端泵参数
 uv run task3_gauss.py --dop 1.0 --Lc 6 --ratio 0.9   # 换掺杂/晶体长度/泵浦比重算
 uv run task3_gauss.py --R1 600 --R2 600 --L 550 --lam 1064 --D 1.6 --quick   # 跳过与 Task 02 的衍射对照
-typst compile --root . report_task3.typ     # 排版本报告
+typst compile --root . task03/report.typ    # 排版本报告
 ```
 
 #figure(
@@ -308,11 +308,11 @@ typst compile --root . report_task3.typ     # 排版本报告
     columns: (auto, 1fr),
     head: ([*文件*], [*作用*]),
     [task3_gauss.py], [全部计算：等价共焦腔闭式解与 $q$ 法自检、腔内包络、Fox-Li 对照、晶体与热透镜、泵浦匹配],
-    [summary_task3.typ], [结果字典 `Q` 与四张表 `FLAT`/`POS`/`THERM`/`PUMP`，本报告的数字来源],
-    [results_task3.json], [同一批结果的机器可读版本（含中间量与自检残差）],
-    [figures_task3/], [五张图（@fig:env ~ @fig:pump）],
-    [task2_foxli.py], [被 import：Task 02 的柱对称 Fresnel 传播算子与 Fox-Li 迭代（对照用）],
-    [results_task2.json], [被读取：Task 02 的模斑、损耗、本征相位（保证同源）],
+    [task03/numbers.typ], [结果字典 `Q` 与四张表 `FLAT`/`POS`/`THERM`/`PUMP`，本报告的数字来源],
+    [task03/results.json], [同一批结果的机器可读版本（含中间量与自检残差）],
+    [task03/figures/], [五张图（@fig:env ~ @fig:pump）],
+    [../task2_foxli.py], [被 import：Task 02 的柱对称 Fresnel 传播算子与 Fox-Li 迭代（对照用）],
+    [../task02/results.json], [被读取：Task 02 的模斑、损耗、本征相位（保证同源）],
   ),
   caption: [表9：文件清单],
 )
@@ -325,4 +325,4 @@ typst compile --root . report_task3.typ     # 排版本报告
 - A. E. Siegman, *Lasers*, Science Books：稳定腔高斯模、$R(z) = z + z_R^2 / z$、古伊相移。
 - W. Koechner, *Solid-State Laser Engineering*（第 6 版）：Nd:YAG 吸收/发射截面与寿命、端泵重叠效率、热透镜公式。
 - Opt. Express 24, 26024 (2016)，端面泵浦凹-凸腔设计中的泵浦/腔模重叠效率表达式（与 @eq:xi 同型）。
-- 本仓库 Task 01 / Task 02 报告：`report_simple.typ`（几何设计与稳定裕度）、`report_task2.typ`（自再现模、最小口径 #Q.dminT2 mm、往返损耗 #Q.lossfox）。
+- 本仓库 Task 01 / Task 02 报告：`task01/report.typ`（几何设计与稳定裕度）、`task02/report.typ`（自再现模、最小口径 #Q.dminT2 mm、往返损耗 #Q.lossfox）。
