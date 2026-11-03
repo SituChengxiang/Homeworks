@@ -487,7 +487,8 @@ def fig_envelope(ec, cry, path):
     ax1.set_ylabel("$w(z)$ / μm")
     ax1.set_title(f"腔内基模包络与束腰、晶体位置（$f$={f*1e3:.1f} mm）", fontsize=10)
     ax1.grid(alpha=0.25, lw=0.4)
-    ax1.legend(fontsize=7.5, loc="upper center", ncol=2)
+    ax1.legend(fontsize=7.2, loc="upper center", bbox_to_anchor=(0.5, -0.26), ncol=3,
+               frameon=False, borderaxespad=0.0)
 
     ax2.axhline(0, color="#333", lw=0.8)
     for zq, lab in ((-f, "$z=-f$ 等效 M1"), (f, "$z=+f$ 等效 M2")):
@@ -511,7 +512,7 @@ def fig_envelope(ec, cry, path):
     ax2.set_xlabel("$z$ / mm（原点取在束腰 / 等效共焦腔中心）")
     ax2.set_title("等价共焦腔：两实际镜面在等效腔镜以内", fontsize=10)
     fig.tight_layout()
-    fig.savefig(path, dpi=190)
+    fig.savefig(path, dpi=190, bbox_inches="tight")   # 图例画在坐标轴外，需要 tight 才不被裁掉
     plt.close(fig)
 
 
@@ -523,7 +524,7 @@ def fig_wavefront(ec, path):
     ax1.axhline(ec["R1"] * 1e3, ls="--", lw=1.1, color="#8b0000", label="镜曲率半径 $R_1=R_2$")
     ax1.plot([0, L * 1e3], [ec["R1"] * 1e3, ec["R2"] * 1e3], "o", ms=6.5, color="#8b0000")
     ax1.axvline(ec["d1"] * 1e3, color="#7a7a7a", ls=":", lw=1.0)
-    ax1.annotate("束腰\n$R=\\infty$", (ec["d1"] * 1e3 + 4, 2900), fontsize=8, color="#555")
+    ax1.annotate("束腰\n$R=\\infty$", (ec["d1"] * 1e3 + 4, 1750), fontsize=8, color="#555")
     ax1.annotate("两镜处 $R(z_i)=R_i$（自再现条件）", (6, 1500), fontsize=8.5, color="#8b0000")
     ax1.set_xlabel("$z$ / mm")
     ax1.set_ylabel("$R(z)$ / mm")
@@ -668,9 +669,10 @@ def fig_pump(pmp, path):
     ax3.set_ylim(0, 1.05)
     ax2.annotate(f"$\\xi$：{pmp['xi_in']:.3f}→{pmp['xi_exit']:.3f}，吸收加权 {pmp['xi_bar']:.3f}",
                  (0.03, 0.17), xycoords="axes fraction", fontsize=8, color="#333")
-    ax2.legend(fontsize=7.5, loc="upper right")
+    ax2.legend(fontsize=7.5, loc="upper center", bbox_to_anchor=(0.5, -0.24), ncol=2,
+               frameon=False, borderaxespad=0.0)
     fig.tight_layout()
-    fig.savefig(path, dpi=190)
+    fig.savefig(path, dpi=190, bbox_inches="tight")   # 图例画在坐标轴外，避免压住曲线
     plt.close(fig)
 
 
