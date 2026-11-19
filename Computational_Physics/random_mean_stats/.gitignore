@@ -1,0 +1,4 @@
+build/
+__pycache__/
+# 单文件版就地编译出来的可执行文件（gcc random_mean_stats_single.c -o 同名）
+random_mean_stats_single

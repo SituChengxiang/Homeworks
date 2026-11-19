@@ -1,0 +1,13 @@
+# model f(x)=A/(sigma*sqrt(2*pi))*exp(-(x-m)^2/(2*sigma^2))
+primary m 0.515569481537
+primary sigma 0.180317423435
+primary A 100.000000000000
+primary SSE 973.834576699961
+free m 0.515528545828
+free sigma 0.180810541098
+free A 100.399782809320
+free SSE 972.194420372772
+literal m 1.508929370818
+literal sigma 3.824020999523
+literal A 1000.000000000000
+literal SSE 57860.569720758365
