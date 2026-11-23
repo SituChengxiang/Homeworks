@@ -1,4 +1,4 @@
-#import "@local/simple-zjut-report:0.1.1": experiment-report
+#import "@local/simple-zjut-report:0.3.0": experiment-report
 #import "numbers.typ": R, COMPARISON
 
 // 数字全部来自 cavity.py 生成的 numbers.typ（本目录），不手抄。
@@ -6,12 +6,13 @@
 #show figure.where(kind: table): set figure(supplement: [表])
 
 #show: doc => experiment-report(
+  mode: "group",
   title: "任务1 第一个稳定光学谐振腔",
-  semester: "2026-2027学年（一）学期",
-  class: "激光原理与技术",
+  semester: "2026-2027学年第一学期",
+  course: "激光原理与技术",
   name: "成员A 成员B 成员C 成员D 成员E",
-  student-id: "5",
-  date: "2026.10.19",
+  group: "5",
+  date: "2026年10月19日",
   doc
 )
 

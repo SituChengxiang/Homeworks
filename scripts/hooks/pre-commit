@@ -1,0 +1,23 @@
+#!/bin/sh
+# 提交前隐私核查。模式清单在仓库外（~/.config/homeworks/privacy-patterns），
+# 所以这个 hook 在未配置清单的机器上只提示、不拦提交——否则换台机器就提交不了。
+#
+# 启用一次即可（git config 属于本机设置，不入库）：
+#     git config core.hooksPath scripts/hooks
+
+ROOT=$(git rev-parse --show-toplevel)
+CHECK="$ROOT/scripts/check_privacy.py"
+[ -f "$CHECK" ] || exit 0
+
+python3 "$CHECK" --staged
+rc=$?
+if [ $rc -eq 2 ]; then
+    echo "pre-commit: 没有隐私模式清单，跳过核查（要启用就建 ~/.config/homeworks/privacy-patterns）" >&2
+    exit 0
+fi
+if [ $rc -ne 0 ]; then
+    echo "pre-commit: 暂存内容里有不该入库的实名，提交已拦下。" >&2
+    echo "  改法：把该文件移出跟踪，或把敏感串换成占位符；确认无误再提交。" >&2
+    exit 1
+fi
+exit 0

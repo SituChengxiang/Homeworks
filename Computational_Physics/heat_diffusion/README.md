@@ -14,7 +14,7 @@
 |---|---|
 | (a) Δx = 0.1 cm，Δt 与收敛条件自设 | Δt = 0.01 s（r = 0.23 ≤ 1/2）；主判据 max\|u−u∞\| ≤ 1e−6 ℃，另配一条逐 step 判据并实测它松多少 |
 | (b) 用生成式 AI 完成 | Qoder 桌面端，分 13 轮 |
-| (c) 提交完整交流记录 | `doc/大模型交互记录.md` + `doc/分模块提问脚本.md` |
+| (c) 提交完整交流记录 | 报告附录（`doc/interaction.typ`，由 `doc/make_interaction.py` 从 Qoder 会话存档生成）+ `doc/大模型交互记录.md` + `doc/分模块提问脚本.md` |
 | (d) 画 10/20/30 s 与完全收敛后的曲线 | `data/fig_d1_*.png`、`data/fig_d2_*.png` |
 | (e) Δx = 0.2 cm 重复 | `data/fig_e1_*.png`、`data/fig_e2_*.png` |
 
@@ -97,7 +97,8 @@ Dirichlet 偶数项恒零、周期的正弦项恒零，都是初值关于棍中�
 | 15 | `make_single_source.py` | 合并单文件版 `heat_diffusion_single.c`（生成物，不要手改） |
 | 16 | `test/run.sh` | 七层验证的总入口 |
 | 17 | `test/check_figs.py` | 交付图像素核对 49 项 |
-| — | `doc/report.typ` | Typst 报告（22 页，13 表 8 图） |
+| — | `doc/report.typ` | Typst 报告（约 44 页：正文 21 + 交互附录 23，13 表 8 图；附录按 10.5pt/0.75em 窄排，正文仍 12pt） |
+| — | `doc/make_interaction.py` | 从 Qoder 会话存档生成 `doc/interaction.typ`（生成物，不要手改）；对话里的 LaTeX 公式与 markdown 表格会转成 Typst 数学与 `#table`，转不干净的退回原样 |
 
 解耦要点：`material.c` 不知道什么是网格，`grid.c` 不知道时间推进，`solver.c` 与
 `crank.c` 各自只认 `Grid` 而不认识对方，`analytic.c` 只做数学、不碰网格。
@@ -302,11 +303,14 @@ plot.py     数据读取
 plot_final.py  8 张图
 test/       selfcheck.c  verify.py  sensitivity.c  check_figs.py  run.sh
 doc/        report.typ / report.pdf
+            interaction.typ / make_interaction.py
             大模型交互记录.md / 分模块提问脚本.md
 build.sh    纯 C89 编译（-Werror）
 run.sh      一键：编译 → 计算导出 → 出图 → 像素核对
 heat_diffusion_single.c  单文件版（生成物，不要手改）
 ```
 
-注意：仓库根的 `.gitignore` 屏蔽了 `*.png` / `*.pdf`。交付图与报告 PDF 要提交得
-`git add -f data/fig_*.png doc/report.pdf`。
+注意：仓库政策是**只放源码与 `data/*.dat`，图与 PDF 都不入库**。交付图由 `sh test/run.sh`
+或 `python3 plot_final.py data` 从 `.dat` 重出，报告由 `typst compile --root . doc/report.typ
+doc/report.pdf` 重出；交完的 PDF 留本地即可，**不要用 `git add -f` 把它们塞回版本库**
+（根 `.gitignore` 的 `*.png` / `*.pdf` 就是这条政策本身）。

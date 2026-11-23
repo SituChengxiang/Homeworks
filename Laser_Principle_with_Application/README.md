@@ -50,7 +50,7 @@ resonator_design/
 
 ```typst
 #import "@local/zjut-phy-hwk:0.2.0": *                    // 物理解答模板
-#import "@local/simple-zjut-report:0.1.1": experiment-report  // 实验报告模板
+#import "@local/simple-zjut-report:0.3.0": experiment-report  // 实验报告模板
 ```
 
 两个包的源文件在 `~/Git/zjut-phy-hwk` 与 `~/Git/ZJUT-Report-Typst`，通过本地包注册表软链接挂载。换新机器或模板版本号变化后，重跑一次建链脚本即可：
@@ -84,5 +84,6 @@ typst compile --root . task03/report.typ      # 15 页
 - Task 03 换晶体/泵浦：`--dop`（at.%）、`--Lc`（mm）、`--rod`（mm）、`--ratio`（泵浦束腰/腔模束腰）、
   `--Pabs`（吸收泵浦功率，用于热透镜换算）、`--T`（OC 透过率 %）、`--quick`（跳过衍射对照）
 
-仓库根 `.gitignore` 已忽略 `*.pdf` 与 `*.png`：报告 PDF 和各 `figures/` 里的图默认不进版本库，
-要留档得 `git add -f <文件>`。脚本与 `numbers.typ`/`results.json` 是入库的。
+仓库政策是**只放源码**：报告 PDF 与各 `figures/` 里的图都不进版本库（根 `.gitignore` 屏蔽 `*.pdf` /
+`*.png`）。所以新克隆里要先 `uv run` 把图重出来，`typst compile --root .` 才编得动报告；
+**不要用 `git add -f` 把二进制塞回去**。脚本与 `numbers.typ`/`results.json` 是入库的。

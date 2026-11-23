@@ -1,4 +1,4 @@
-#import "@local/simple-zjut-report:0.1.1": experiment-report, three-line-table
+#import "@local/simple-zjut-report:0.3.0": experiment-report, three-line-table
 #import "numbers.typ": Q, SWEEP
 
 // 全部数字来自 task2_foxli.py 生成的 numbers.typ（本目录），不手抄。
@@ -7,12 +7,13 @@
 #set math.equation(numbering: "(1)")
 
 #show: doc => experiment-report(
+  mode: "group",
   title: "任务2 稳定腔的自再现模与衍射损耗",
-  semester: "2026-2027学年（一）学期",
-  class: "激光原理与技术",
+  semester: "2026-2027学年第一学期",
+  course: "激光原理与技术",
   name: "成员A 成员B 成员C 成员D 成员E",
-  student-id: "5",
-  date: "2026.10.21",
+  group: "5",
+  date: "2026年10月21日",
   doc
 )
 

@@ -380,12 +380,10 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# VS Code files for those working on multiple tools
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# VS Code / JetBrains 等编辑器配置：一律不进库（原先模板放行的
+# settings/tasks/launch/extensions 例外已取消；已跟踪的漏网文件 git rm --cached）
+.vscode/
+.idea/
 *.code-workspace
 
 # Local History for Visual Studio Code
@@ -402,9 +400,61 @@ FodyWeavers.xsd
 *.sln.iml
 *.idea
 
-# Others
+*.qoder/
+*.venv/
+
+# Others：二进制文件一律不进库，仓库只留源码（已跟踪的旧文件不动）
+# 压缩包
 *.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.tgz
+*.bz2
+*.xz
+# 图片（svg 是文本矢量图，保留）
 *.png
-*.pdf
-*.mp4
+*.jpg
+*.jpeg
 *.gif
+*.bmp
+*.webp
+*.ico
+*.tif
+*.tiff
+# 文档
+*.pdf
+*.doc
+*.docx
+*.rtf
+*.ppt
+*.pptx
+*.pps
+*.ppsx
+*.xls
+*.xlsx
+# 音视频
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.flac
+*.m4a
+# 数据 / 字体 / 构建产物
+*.npy
+*.npz
+*.pkl
+*.db
+*.sqlite
+*.sqlite3
+*.ttf
+*.otf
+*.woff
+*.woff2
+*.o
+*.exe
+*.out

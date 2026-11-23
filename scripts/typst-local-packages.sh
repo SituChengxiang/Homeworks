@@ -76,7 +76,7 @@ cat <<'EOF'
 作业里这样引用（glob 导入即可拿到 hwk / problem / solution / 物理常数等全部定义）：
 
   #import "@local/zjut-phy-hwk:0.2.0": *          # 物理解答模板
-  #import "@local/simple-zjut-report:0.1.1": experiment-report   # 实验报告模板
+  #import "@local/simple-zjut-report:0.3.0": experiment-report   # 实验报告模板
 
 编译不需要额外的 --root，typst 会从本地包目录解析 @local。
 EOF

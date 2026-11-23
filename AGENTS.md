@@ -19,9 +19,18 @@
 
 ## 全仓库注意
 
-- 根 `.gitignore` 末尾自定义了 `*.zip`、`*.png`、`*.pdf`。**新生成的图 / PDF / 视频不会出现在 `git status` 里**；
-  要提交用 `git add -f <文件>`。大量 PNG/PDF 是加这条规则之前就已跟踪的。
-- 没有 CI、没有 pre-commit、没有根级任务配置，别臆造根目录命令。
+- 仓库只放**源码与可复算的数据**：图、PDF、视频、压缩包一律不入库，**也不要 `git add -f`**。
+  根 `.gitignore` 的 `*.png` / `*.pdf` / `*.zip` 就是这条政策（注释原文是「二进制文件一律不进库，
+  仓库只留源码（已跟踪的旧文件不动）」）。交付物在本地现编现用，交完可删；要长期留档放仓库外。
+  历史里那些已跟踪的 PNG/PDF 是政策之前留下的，正在逐步取消跟踪——**别把它们当成「二进制可以入库」的先例**。
+- 提交前跑隐私核查：`python3 scripts/check_privacy.py --staged`（hook 在 `scripts/hooks/pre-commit`，
+  启用一次 `git config core.hooksPath scripts/hooks`，这是本机设置、不入库）。模式清单在仓库之外
+  `~/.config/homeworks/privacy-patterns`（权限 600），**绝不把清单本身提交进任何仓库**，否则检查工具
+  自己就成了新的泄露点。核查输出只报「第 N 号模式 + 掩码上下文」，真名不回显。
+  计算物理报告封面的姓名/学号是交付物需要的；激光原理的小组名单在源码里写成 `成员A…成员E` 占位，
+  真实名单只留在已提交的那份交付件里。
+- 没有 CI、没有根级任务配置，别臆造根目录命令。唯一的钩子是可选的隐私核查
+  （`scripts/hooks/pre-commit`，要 `git config core.hooksPath scripts/hooks` 才生效，不配置模式清单时只提示不拦）。
 - Typst 报告封面按课程分模式（`simple-zjut-report:0.3.0` 的 `mode`）：
   **计算物理 = `mode: "individual"`**（课程 / 专业班级 / 姓名 / 学号 / 报告日期，课程名传 `course:`），
   **激光原理 = `mode: "group"`**（课程 / 专业班级 / 成员 / 小组 / 报告日期，用 `course:` 与 `group:`）。
@@ -78,8 +87,9 @@
   「逐 step 变化量小于阈值」在慢衰减问题上松 `τ/Δt = 4405` 倍，会提前一半时间停手。
 - 出交付 PDF：`typst compile --root . doc/report.typ doc/report.pdf`。图片路径是 `../data/*.png`，
   **漏掉 `--root .` 会报 `would escape the project root`**。
-- 图与 PDF 被根 `.gitignore` 屏蔽，入库要 `git add -f data/fig_*.png doc/report.pdf`；
-  `data/fig_*.pdf` 是矢量副本、报告不引用，**不入库**（单 fig_evolution 就 2.3 MB）。
+- 图与 PDF **都不入库**（仓库政策：只放源码与 `data/*.dat`）。8 张图由 `sh test/run.sh` 或
+  `python3 plot_final.py data` 从 `.dat` 重出，报告由 `typst compile --root . doc/report.typ doc/report.pdf` 重出。
+  **别再写 `git add -f`**；交付用的 PDF 留本地，交完可删。`data/fig_*.pdf` 是矢量副本、报告不引用。
 
 ## Laser_Principle_with_Application
 
