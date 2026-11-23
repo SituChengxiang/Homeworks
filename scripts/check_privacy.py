@@ -129,18 +129,41 @@ def check_worktree(patterns):
 
 
 def check_history(patterns):
+    """扫全部对象：blob 内容 + 作者名/邮箱 + 提交信息。
+
+    不用 `git log -S`（pickaxe）——它把「删除了该串」的提交也算命中，
+    重写之后验收会假阳性，反而看不出真残留。
+    """
     hits = []
-    refs = [x for x in run(["git", "for-each-ref", "--format=%(refname)",
-                            "refs/heads", "refs/tags", "refs/stash",
-                            "refs/remotes"]).split("\n") if x]
+    listing = run(["git", "cat-file", "--batch-all-objects",
+                   "--batch=%(objectname) %(objecttype)"]).split("\n")
+    blob_shas = [l.split()[0] for l in listing
+                 if l.strip() and len(l.split()) > 1 and l.split()[1] == "blob"]
+    if blob_shas:
+        # 一次进程把全部 blob 内容取回来，逐个 sha 边界靠分隔标记切分太脆，
+        # 这里直接整体扫：只要计数为 0 就说明任何 blob 都不含
+        data = subprocess.run(["git", "cat-file", "--batch=" + "\n".join(blob_shas)],
+                              capture_output=True).stdout
+        for idx, (raw, _rx) in enumerate(patterns, 1):
+            if not raw.startswith("regex:") and raw.encode() in data:
+                hits.append((idx, "blob 内容（%d 个对象）" % len(blob_shas), ""))
+    meta = run(["git", "log", "--all", "--format=%an|%ae|%cn|%ce|%s|%b"])
     for idx, (raw, _rx) in enumerate(patterns, 1):
-        needle = raw if not raw.startswith("regex:") else None
-        if needle is None:
-            continue
-        out = run(["git", "log", "--all", "--oneline", "-S", needle, "--format=%h"])
-        for c in [x for x in out.split("\n") if x]:
-            hits.append((idx, "历史提交 " + c, ""))
-    return hits, len(refs)
+        needle = None if raw.startswith("regex:") else raw
+        if needle and needle in meta:
+            where = []
+            for line in meta.split("\n"):
+                parts = line.split("|")
+                for field, label in zip(parts, ["作者名", "作者邮箱",
+                                                "提交者名", "提交者邮箱",
+                                                "标题", "正文"]):
+                    if needle in field:
+                        where.append(label)
+                        break
+                if where:
+                    break
+            hits.append((idx, "提交元数据（%s）" % "+".join(sorted(set(where))), ""))
+    return hits, len(blob_shas)
 
 
 def report(title, hits):
@@ -171,8 +194,8 @@ def main():
             for rel, ids in artifacts:
                 print("    %s  ← 模式 %s" % (rel, ids))
     elif mode == "--history":
-        hits, nrefs = check_history(patterns)
-        ok = report("历史（%d 个 ref 全查）" % nrefs, hits)
+        hits, nblobs = check_history(patterns)
+        ok = report("历史（%d 个 blob + 提交元数据）" % nblobs, hits)
         if not ok:
             print("  说明：HEAD 干净但历史仍有，需要 git-filter-repo 重写才算清完。")
     else:

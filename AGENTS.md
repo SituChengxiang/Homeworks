@@ -19,10 +19,16 @@
 
 ## 全仓库注意
 
-- 仓库只放**源码与可复算的数据**：图、PDF、视频、压缩包一律不入库，**也不要 `git add -f`**。
+- 仓库只放**源码与可复算的数据**：**能重出的**图、PDF、视频、压缩包一律不入库，**也不要 `git add -f`**。
   根 `.gitignore` 的 `*.png` / `*.pdf` / `*.zip` 就是这条政策（注释原文是「二进制文件一律不进库，
   仓库只留源码（已跟踪的旧文件不动）」）。交付物在本地现编现用，交完可删；要长期留档放仓库外。
   历史里那些已跟踪的 PNG/PDF 是政策之前留下的，正在逐步取消跟踪——**别把它们当成「二进制可以入库」的先例**。
+- **例外：重不出来的图必须保留跟踪**，删了就是丢数据。目前已知两类——
+  `Mathematical_Physical_Methods/` 的 4 张（原题已找不到，留给学弟学妹看）和
+  `matlab/CourseDesign/assets/` 的 13 张（FTLE、Poincaré 截面等，生成脚本不在本仓库）。
+  判断「能不能重出」**别用「同目录有没有脚本」这种捷径**——计算物理三份作业的绘图脚本在项目根
+  （`plot.py` / `plot_final.py`），不在 `data/` 里，按同目录去找会把这 10 张可重出的图误判成不可重出。
+  要确认就真跑一遍该目录自带的出图命令，看文件是否重新出现。
 - 提交前跑隐私核查：`python3 scripts/check_privacy.py --staged`（hook 在 `scripts/hooks/pre-commit`，
   启用一次 `git config core.hooksPath scripts/hooks`，这是本机设置、不入库）。模式清单在仓库之外
   `~/.config/homeworks/privacy-patterns`（权限 600），**绝不把清单本身提交进任何仓库**，否则检查工具
